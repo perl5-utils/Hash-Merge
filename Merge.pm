@@ -4,11 +4,14 @@ package Hash::Merge;
 
 #=============================================================================
 #
-# $Id: Merge.pm,v 0.04 2001/10/31 03:59:03 mneylon Exp $
-# $Revision: 0.04 $
+# $Id: Merge.pm,v 0.05 2001/11/02 02:15:54 mneylon Exp $
+# $Revision: 0.05 $
 # $Author: mneylon $
-# $Date: 2001/10/31 03:59:03 $
+# $Date: 2001/11/02 02:15:54 $
 # $Log: Merge.pm,v $
+# Revision 0.05  2001/11/02 02:15:54  mneylon
+# Yet another fix to Test::More requirement (=> 0.33)
+#
 # Revision 0.04  2001/10/31 03:59:03  mneylon
 # Forced Test::More requirement in makefile
 # Fixed problems with pod documentation
@@ -33,7 +36,7 @@ use strict;
 BEGIN {
     use Exporter   ();
     use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-    $VERSION     = sprintf( "%d.%02d", q($Revision: 0.04 $) =~ /\s(\d+)\.(\d+)/ );
+    $VERSION     = sprintf( "%d.%02d", q($Revision: 0.05 $) =~ /\s(\d+)\.(\d+)/ );
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
 	@EXPORT_OK   = qw( merge );
@@ -388,6 +391,9 @@ under the same terms as Perl itself.
 =head1 HISTORY
 
 $Log: Merge.pm,v $
+Revision 0.05  2001/11/02 02:15:54  mneylon
+Yet another fix to Test::More requirement (=> 0.33)
+
 Revision 0.04  2001/10/31 03:59:03  mneylon
 Forced Test::More requirement in makefile
 Fixed problems with pod documentation

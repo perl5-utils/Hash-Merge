@@ -1,4 +1,4 @@
-Hash/Merge version $Revision: 0.04 $
+Hash/Merge version $Revision: 0.05 $
 =========================================
 
 Hash::Merge merges two arbitrarily deep hashes into a single hash.  That

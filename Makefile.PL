@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'		=> 'Hash::Merge',
     'VERSION_FROM'	=> 'Merge.pm', # finds $VERSION
-    'PREREQ_PM'		=> { Test::More => 0.08 }, 
+    'PREREQ_PM'		=> { Test::More => 0.33 }, 
     ($] >= 5.005 ?   
       (ABSTRACT_FROM => 'Merge.pm', 
        AUTHOR     => 'Michael K. Neylon <mneylon-pm@masemware.com') : ()),
