@@ -4,11 +4,26 @@ package Hash::Merge;
 
 #=============================================================================
 #
-# $Id: Merge.pm,v 0.05 2001/11/02 02:15:54 mneylon Exp $
-# $Revision: 0.05 $
+# $Id: Merge.pm,v 0.06 2001/11/10 03:30:34 mneylon Exp $
+# $Revision: 0.06 $
 # $Author: mneylon $
-# $Date: 2001/11/02 02:15:54 $
+# $Date: 2001/11/10 03:30:34 $
 # $Log: Merge.pm,v $
+# Revision 0.06  2001/11/10 03:30:34  mneylon
+# Version 0.06 release (and more CVS fixes)
+#
+# Revision 0.05.02.2  2001/11/10 03:22:58  mneylon
+# Updated documentation
+#
+# Revision 0.05.02.1  2001/11/08 00:14:48  mneylon
+# Fixing CVS problems
+#
+# Revision 0.05.01.1  2001/11/06 03:26:56  mneylon
+# Fixed some undefined variable problems for 5.005.
+# Added cloning of data and set/get_clone_behavior functions
+# Added associated testing of data cloning
+# Fixed some problems with POD
+#
 # Revision 0.05  2001/11/02 02:15:54  mneylon
 # Yet another fix to Test::More requirement (=> 0.33)
 #
@@ -32,15 +47,16 @@ package Hash::Merge;
 #=============================================================================
 
 use strict;
+use Clone qw(clone);
 
 BEGIN {
     use Exporter   ();
     use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-    $VERSION     = sprintf( "%d.%02d", q($Revision: 0.05 $) =~ /\s(\d+)\.(\d+)/ );
+    $VERSION     = sprintf( "%d.%02d", q($Revision: 0.06 $) =~ /\s(\d+)\.(\d+)/ );
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
-	@EXPORT_OK   = qw( merge );
-    %EXPORT_TAGS = ( );
+	@EXPORT_OK   = qw( merge _hashify _merge_hashes );
+    %EXPORT_TAGS = ( custom => [ qw( _hashify _merge_hashes )] );
 }
 
 my %left_precedent = (
@@ -113,6 +129,8 @@ my %behaviors = (
 my $merge_behavior = 'LEFT_PRECEDENT';
 my $merge_matrix = \%{ $behaviors{ $merge_behavior } };
 
+my $clone_behavior = 1;
+
 sub set_behavior {
 	my $value = uc(shift);
 	die "Behavior must be one of : " , join ' ', keys %behaviors 
@@ -141,11 +159,26 @@ sub specify_behavior {
 	$merge_matrix = $matrix;
 }
 
+sub set_clone_behavior {
+    my $temp = shift;
+	$clone_behavior = ( $temp ) ? 1 : 0;
+}
+
+sub get_clone_behavior {
+	return $clone_behavior;
+}
+
 sub merge {
 	my ( $left, $right ) = ( shift, shift );
 
+	# For the general use of this module, we want to create duplicates
+	# of all data that is merged.  This behavior can be shut off, but 
+	# can mess havoc if references are used heavily.
+
 	my ( $lefttype, $righttype );
-	if ( UNIVERSAL::isa( $left, 'HASH' ) ) { 
+	if ( !defined( $left ) ) {		# Perl 5.005 compatibility
+		$lefttype = 'SCALAR';
+	} elsif ( UNIVERSAL::isa( $left, 'HASH' ) ) { 
 		$lefttype = 'HASH';
 	} elsif ( UNIVERSAL::isa( $left, 'ARRAY' ) ) {
 		$lefttype = 'ARRAY';
@@ -153,7 +186,9 @@ sub merge {
 		$lefttype = 'SCALAR';
 	}
 
-	if ( UNIVERSAL::isa( $right, 'HASH' ) ) { 
+	if ( !defined( $right ) ) {		# Perl 5.005 compatibility
+		$righttype = 'SCALAR';
+	} elsif ( UNIVERSAL::isa( $right, 'HASH' ) ) { 
 		$righttype = 'HASH';
 	} elsif ( UNIVERSAL::isa( $right, 'ARRAY' ) ) {
 		$righttype = 'ARRAY';
@@ -161,6 +196,11 @@ sub merge {
 		$righttype = 'SCALAR';
 	}
 	
+	if ( $clone_behavior ) {
+		$left = clone ( $left, 1 ); 
+		$right = clone ( $right, 1 );
+	}
+
 	return &{ $merge_matrix->{ $lefttype }->{ $righttype }}
 		( $left, $right );
 }	
@@ -179,12 +219,16 @@ sub _merge_hashes {
 			$newhash{ $leftkey } = 
 				merge ( $left->{ $leftkey }, $right->{ $leftkey } )
 		} else {
-			$newhash{ $leftkey } = $left->{ $leftkey };
+			$newhash{ $leftkey } = 
+				( $clone_behavior ) ? clone( $left->{ $leftkey } )
+								    : $left->{ $leftkey };
 		}
 	}
 	foreach my $rightkey ( keys %$right ) { 
 		if ( !exists $left->{ $rightkey } ) {
-			$newhash{ $rightkey } = $right->{ $rightkey }
+			$newhash{ $rightkey } = 
+				( $clone_behavior ) ? clone( $right->{ $rightkey } )
+								    : $right->{ $rightkey };
 		}
 	}
 	return \%newhash;
@@ -232,7 +276,7 @@ Hash::Merge - Merges arbitrarily deep hashes into a single hash
             bar => [ c, d ],
 			querty => { ted => margeret } );
 
-  my %c = merge( \%a, \%b );
+  my %c = %{ merge( \%a, \%b ) };
 
   Hash::Merge::set_behavior( RIGHT_PRECEDENCE );
 
@@ -264,7 +308,10 @@ when the parent hashes are merged.  B<Please note that self-referencing
 hashes, or recursive references, are not handled well by this method.>
 
 Values in hashes are considered to be either ARRAY references, 
-HASH references, or otherwise are treated as SCALARs.
+HASH references, or otherwise are treated as SCALARs.  By default, the 
+data passed to the merge function will be cloned using the Clone module; 
+however, if necessary, this behavior can be changed to use as many of 
+the original values as possible.  (See C<set_clone_behavior>). 
 
 Because there are a number of possible ways that one may want to merge
 values when keys are conflicting, Hash::Merge provides several preset
@@ -273,23 +320,27 @@ These are (currently):
 
 =over
 
-=item *
-Left Precedence - The values buried in the left hash will never
+=item Left Precedence
+
+The values buried in the left hash will never
 be lost; any values that can be added from the right hash will be
 attempted.
 
-=item *
-Right Precedence - Same as Left Precedence, but with the right
+=item Right Precedence
+
+Same as Left Precedence, but with the right
 hash values never being lost
 
-=item *
-Storage Precedence - If conflicting keys have two different
+=item Storage Precedence
+
+If conflicting keys have two different
 storage mediums, the 'bigger' medium will win; arrays are preferred over
 scalars, hashes over either.  The other medium will try to be fitted in
 the other, but if this isn't possible, the data is dropped.
 
-=item *
-Retainment Precedence - No data will be lost; scalars will be joined
+=item Retainment Precedence
+
+No data will be lost; scalars will be joined
 with arrays, and scalars and arrays will be 'hashified' to fit them into
 a hash.
 
@@ -316,6 +367,16 @@ and it's value equal to that specific value.  Example, if you pass scalar
 Actually does the key-by-key evaluation of two hashes and returns 
 the new merged hash.  Note that this recursively calls C<merge>.
 
+=item set_clone_behavior( <scalar> ) 
+
+Sets how the data cloning is handled by Hash::Merge.  If this is true,
+then data will be cloned; if false, then original data will be used
+whenever possible.  By default, cloning is on (set to true).
+
+=item get_clone_behavior( )
+
+Returns the current behavior for data cloning.
+
 =item set_behavior( <scalar> )
 
 Specify which built-in behavior for merging that is desired.  The scalar
@@ -340,6 +401,9 @@ behavior specification include:
 
    %spec = ( ...SCALAR => { ARRAY => sub { [ $_[0], @$_[1] ] }, ... } } );
 
+Note that you can import _hashify and _merge_hashes into your program's
+namespace with the 'custom' tag.
+
 =back
 
 =head1 BUILT-IN BEHAVIORS
@@ -348,27 +412,28 @@ Here is the specifics on how the current internal behaviors are called,
 and what each does.  Assume that the left value is given as $a, and
 the right as $b (these are either scalars or appropriate references)
 
-LEFT TYPE   RIGHT TYPE      LEFT_PRECEDENT       RIGHT_PRECEDENT
- SCALAR      SCALAR            $a                   $b
- SCALAR      ARRAY             $a                   ( $a, @$b )
- SCALAR      HASH              $a                   %$b
- ARRAY       SCALAR            ( @$a, $b )          $b
- ARRAY       ARRAY             ( @$a, @$b )         ( @$a, @$b )
- ARRAY       HASH              ( @$a, values %$b )  %$b 
- HASH        SCALAR            %$a                  $b
- HASH        ARRAY             %$a                  ( values %$a, @$b )
- HASH        HASH              merge( %$a, %$b )    merge( %$a, %$b )
+	LEFT TYPE   RIGHT TYPE      LEFT_PRECEDENT       RIGHT_PRECEDENT
+	 SCALAR      SCALAR            $a                   $b
+	 SCALAR      ARRAY             $a                   ( $a, @$b )
+	 SCALAR      HASH              $a                   %$b
+	 ARRAY       SCALAR            ( @$a, $b )          $b
+	 ARRAY       ARRAY             ( @$a, @$b )         ( @$a, @$b )
+	 ARRAY       HASH              ( @$a, values %$b )  %$b 
+	 HASH        SCALAR            %$a                  $b
+	 HASH        ARRAY             %$a                  ( values %$a, @$b )
+	 HASH        HASH              merge( %$a, %$b )    merge( %$a, %$b )
 
-LEFT TYPE   RIGHT TYPE  STORAGE_PRECEDENT   RETAINMENT_PRECEDENT
- SCALAR      SCALAR     $a                  ( $a ,$b )
- SCALAR      ARRAY      ( $a, @$b )         ( $a, @$b )
- SCALAR      HASH       %$b                 merge( hashify( $a ), %$b )
- ARRAY       SCALAR     ( @$a, $b )         ( @$a, $b )
- ARRAY       ARRAY      ( @$a, @$b )        ( @$a, @$b )
- ARRAY       HASH       %$b                 merge( hashify( @$a ), %$b )
- HASH        SCALAR     %$a                 merge( %$a, hashify( $b ) )
- HASH        ARRAY      %$a                 merge( %$a, hashify( @$b ) )
- HASH        HASH       merge( %$a, %$b )   merge( %$a, %$b )
+	LEFT TYPE   RIGHT TYPE  STORAGE_PRECEDENT   RETAINMENT_PRECEDENT
+	 SCALAR      SCALAR     $a                  ( $a ,$b )
+	 SCALAR      ARRAY      ( $a, @$b )         ( $a, @$b )
+	 SCALAR      HASH       %$b                 merge( hashify( $a ), %$b )
+	 ARRAY       SCALAR     ( @$a, $b )         ( @$a, $b )
+	 ARRAY       ARRAY      ( @$a, @$b )        ( @$a, @$b )
+	 ARRAY       HASH       %$b                 merge( hashify( @$a ), %$b )
+	 HASH        SCALAR     %$a                 merge( %$a, hashify( $b ) )
+	 HASH        ARRAY      %$a                 merge( %$a, hashify( @$b ) )
+	 HASH        HASH       merge( %$a, %$b )   merge( %$a, %$b )
+
 
 (*) note that merge calls _merge_hashes, hashify calls _hashify.
 
@@ -390,19 +455,33 @@ under the same terms as Perl itself.
 
 =head1 HISTORY
 
-$Log: Merge.pm,v $
-Revision 0.05  2001/11/02 02:15:54  mneylon
-Yet another fix to Test::More requirement (=> 0.33)
+	$Log: Merge.pm,v $
+	Revision 0.06  2001/11/10 03:30:34  mneylon
+	Version 0.06 release (and more CVS fixes)
+	
+	Revision 0.05.02.2  2001/11/10 03:22:58  mneylon
+	Updated documentation
+	
+	Revision 0.05.02.1  2001/11/08 00:14:48  mneylon
+	Fixing CVS problems
+	
+	Revision 0.05.01.1  2001/11/06 03:26:56  mneylon
+	Fixed some undefined variable problems for 5.005.
+	Added cloning of data and set/get_clone_behavior functions
+	Added associated testing of data cloning
+	Fixed some problems with POD
+	
+	Revision 0.05  2001/11/02 02:15:54  mneylon
+	Yet another fix to Test::More requirement (=> 0.33)
 
-Revision 0.04  2001/10/31 03:59:03  mneylon
-Forced Test::More requirement in makefile
-Fixed problems with pod documentation
+	Revision 0.04  2001/10/31 03:59:03  mneylon
+	Forced Test::More requirement in makefile
+	Fixed problems with pod documentation
 
-Revision 0.03  2001/10/28 23:36:12  mneylon
-CPAN Release with CVS fixes
+	Revision 0.03  2001/10/28 23:36:12  mneylon
+	CPAN Release with CVS fixes
 
-Revision 0.02  2001/10/28 23:05:03  mneylon
-CPAN release
-
+	Revision 0.02  2001/10/28 23:05:03  mneylon
+	CPAN release
 
 =cut

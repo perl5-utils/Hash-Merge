@@ -1,6 +1,18 @@
 Revision history for Perl extension Hash::Merge.
 
 $Log: Changes,v $
+Revision 0.06  2001/11/10 03:30:34  mneylon
+Version 0.06 release (and more CVS fixes)
+
+Revision 0.05.02.1  2001/11/08 00:14:47  mneylon
+Fixing CVS problems
+
+Revision 0.05.01.2  2001/11/06 03:26:56  mneylon
+Fixed some undefined variable problems for 5.005.
+Added cloning of data and set/get_clone_behavior functions
+Added associated testing of data cloning
+Fixed some problems with POD
+
 Revision 0.05  2001/11/02 02:15:54  mneylon
 Yet another fix to Test::More requirement (=> 0.33)
 
