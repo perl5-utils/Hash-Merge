@@ -4,11 +4,15 @@ package Hash::Merge;
 
 #=============================================================================
 #
-# $Id: Merge.pm,v 0.03 2001/10/28 23:36:12 mneylon Exp $
-# $Revision: 0.03 $
+# $Id: Merge.pm,v 0.04 2001/10/31 03:59:03 mneylon Exp $
+# $Revision: 0.04 $
 # $Author: mneylon $
-# $Date: 2001/10/28 23:36:12 $
+# $Date: 2001/10/31 03:59:03 $
 # $Log: Merge.pm,v $
+# Revision 0.04  2001/10/31 03:59:03  mneylon
+# Forced Test::More requirement in makefile
+# Fixed problems with pod documentation
+#
 # Revision 0.03  2001/10/28 23:36:12  mneylon
 # CPAN Release with CVS fixes
 #
@@ -29,7 +33,7 @@ use strict;
 BEGIN {
     use Exporter   ();
     use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-    $VERSION     = sprintf( "%d.%02d", q($Revision: 0.03 $) =~ /\s(\d+)\.(\d+)/ );
+    $VERSION     = sprintf( "%d.%02d", q($Revision: 0.04 $) =~ /\s(\d+)\.(\d+)/ );
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
 	@EXPORT_OK   = qw( merge );
@@ -253,7 +257,7 @@ is, at any level, it will add non-conflicting key-value pairs from one
 hash to the other, and follows a set of specific rules when there are key
 value conflicts (as outlined below).  The hash is followed recursively,
 so that deeply nested hashes that are at the same level will be merged 
-when the parent hashes are merged.  b<Please note that self-referencing
+when the parent hashes are merged.  B<Please note that self-referencing
 hashes, or recursive references, are not handled well by this method.>
 
 Values in hashes are considered to be either ARRAY references, 
@@ -266,19 +270,23 @@ These are (currently):
 
 =over
 
-=item Left Precedence - The values buried in the left hash will never
+=item *
+Left Precedence - The values buried in the left hash will never
 be lost; any values that can be added from the right hash will be
 attempted.
 
-=item Right Precedence - Same as Left Precedence, but with the right
+=item *
+Right Precedence - Same as Left Precedence, but with the right
 hash values never being lost
 
-=item Storage Precedence - If conflicting keys have two different 
+=item *
+Storage Precedence - If conflicting keys have two different
 storage mediums, the 'bigger' medium will win; arrays are preferred over
 scalars, hashes over either.  The other medium will try to be fitted in
 the other, but if this isn't possible, the data is dropped.
 
-=item Retainment Precedence - No data will be lost; scalars will be joined
+=item *
+Retainment Precedence - No data will be lost; scalars will be joined
 with arrays, and scalars and arrays will be 'hashified' to fit them into
 a hash.
 
@@ -368,7 +376,7 @@ Plans for a future version include incorporate deep recursion protection.
 
 =head1 AUTHOR
 
-Michael K. Neylon <lt>mneylon-pm@masemware.com<gt>
+Michael K. Neylon E<lt>mneylon-pm@masemware.comE<gt>
 
 =head1 COPYRIGHT
 
@@ -380,6 +388,10 @@ under the same terms as Perl itself.
 =head1 HISTORY
 
 $Log: Merge.pm,v $
+Revision 0.04  2001/10/31 03:59:03  mneylon
+Forced Test::More requirement in makefile
+Fixed problems with pod documentation
+
 Revision 0.03  2001/10/28 23:36:12  mneylon
 CPAN Release with CVS fixes
 
