@@ -1,0 +1,6 @@
+Revision history for Perl extension Hash::Merge.
+
+0.01  Mon Oct 22 19:07:04 2001
+	- original version; created by h2xs 1.21 with options
+		-X Hash::Merge
+
