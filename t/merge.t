@@ -6,23 +6,23 @@ use Hash::Merge qw( merge );
 
 my %left = ( ss => 'left',
              sa => 'left',
-			 sh => 'left',
-			 as => [ 'l1', 'l2' ],
-			 aa => [ 'l1', 'l2' ],
-			 ah => [ 'l1', 'l2' ],
-			 hs => { left=>1 },
-			 ha => { left=>1 },
-			 hh => { left=>1 } );
+	     sh => 'left',
+	     as => [ 'l1', 'l2' ],
+	     aa => [ 'l1', 'l2' ],
+	     ah => [ 'l1', 'l2' ],
+	     hs => { left=>1 },
+	     ha => { left=>1 },
+	     hh => { left=>1 } );
 
 my %right = ( ss => 'right',
-			  as => 'right',
-			  hs => 'right',
-			  sa => [ 'r1', 'r2' ],
-			  aa => [ 'r1', 'r2' ],
-			  ha => [ 'r1', 'r2' ],
-			  sh => { right=>1 },
-			  ah => { right=>1 },
-			  hh => { right=>1 } );
+	      as => 'right',
+	      hs => 'right',
+	      sa => [ 'r1', 'r2' ],
+	      aa => [ 'r1', 'r2' ],
+	      ha => [ 'r1', 'r2' ],
+	      sh => { right=>1 },
+	      ah => { right=>1 },
+	      hh => { right=>1 } );
 
 # Test left precedence
 Hash::Merge::set_behavior( 'LEFT_PRECEDENT' );
@@ -74,27 +74,27 @@ is_deeply( %rep->{sh},	{ left=>'left', right=>1 },	'Retainment Precedent - Scala
 is_deeply( %rep->{as},	[ 'l1', 'l2', 'right'],		'Retainment Precedent - Array on Scalar' );
 is_deeply( %rep->{aa},	[ 'l1', 'l2', 'r1', 'r2' ],	'Retainment Precedent - Array on Array' );
 is_deeply( %rep->{ah},	{ l1=>'l1', l2=>'l2', right=>1 },				
-													'Retainment Precedent - Array on Hash' );
+	   'Retainment Precedent - Array on Hash' );
 is_deeply( %rep->{hs},	{ left=>1, right=>'right' },
-													'Retainment Precedent - Hash on Scalar' );
+	   'Retainment Precedent - Hash on Scalar' );
 is_deeply( %rep->{ha},	{ left=>1, r1=>'r1', r2=>'r2' },				
-													'Retainment Precedent - Hash on Array' );
+	   'Retainment Precedent - Hash on Array' );
 is_deeply( %rep->{hh},	{ left=>1, right=>1 },		'Retainment Precedent - Hash on Hash' );
 
 Hash::Merge::specify_behavior( {
-  	SCALAR => {
-		SCALAR => sub { $_[0] },
-		ARRAY  => sub { $_[0] },
-		HASH   => sub { $_[0] } },
-	ARRAY => {
-		SCALAR => sub { $_[0] },
-		ARRAY  => sub { $_[0] },
-		HASH   => sub { $_[0] } },
-	HASH => {
-		SCALAR => sub { $_[0] },
-		ARRAY  => sub { $_[0] },
-		HASH   => sub { $_[0] } }
-  }, "My Behavior" );
+				SCALAR => {
+					   SCALAR => sub { $_[0] },
+					   ARRAY  => sub { $_[0] },
+					   HASH   => sub { $_[0] } },
+				ARRAY => {
+					  SCALAR => sub { $_[0] },
+					  ARRAY  => sub { $_[0] },
+					  HASH   => sub { $_[0] } },
+				HASH => {
+					 SCALAR => sub { $_[0] },
+					 ARRAY  => sub { $_[0] },
+					 HASH   => sub { $_[0] } }
+			       }, "My Behavior" );
 
 my %cp = %{merge( \%left, \%right )};
 

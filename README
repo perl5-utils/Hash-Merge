@@ -1,4 +1,4 @@
-Hash/Merge version $Revision: 0.06 $
+Hash/Merge version $Revision: 0.07 $
 =========================================
 
 Hash::Merge merges two arbitrarily deep hashes into a single hash.  That
@@ -31,3 +31,8 @@ Copyright (c) 2001 Michael K. Neylon. All rights reserved.
 This library is free software.  You can redistribute it and/or modify it 
 under the same terms as Perl itself.
 
+ACKNOWLEDGEMENTS
+
+Thanks to:
+- Chuck Charbeneau for pointing out interference bugs from ActiveState
+- Jeff Fitzgibbon for pointing out inconsistance typo in POD

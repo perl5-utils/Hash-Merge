@@ -1,6 +1,14 @@
 Revision history for Perl extension Hash::Merge.
 
 $Log: Changes,v $
+Revision 0.07  2002/02/19 00:21:27  mneylon
+Fixed problem with ActiveState Perl's Clone.pm implementation.
+Fixed typo in POD.
+Fixed formatting of code in general.
+
+Revision 0.06.01.1  2002/02/17 02:48:54  mneylon
+Branched version.
+
 Revision 0.06  2001/11/10 03:30:34  mneylon
 Version 0.06 release (and more CVS fixes)
 
