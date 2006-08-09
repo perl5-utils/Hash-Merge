@@ -9,6 +9,9 @@ package Hash::Merge;
 # $Author: mneylon $
 # $Date: 2002/02/19 00:21:27 $
 # $Log: Merge.pm,v $
+# Revision 0.08  2006/08/08 21:46:00  mneylon
+# Fixed hash referencing issue with perl 5.8.8 in test sequence 
+#
 # Revision 0.07  2002/02/19 00:21:27  mneylon
 # Fixed problem with ActiveState Perl's Clone.pm implementation.
 # Fixed typo in POD.
@@ -66,7 +69,7 @@ BEGIN {
   use Exporter   ();
   use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK 
 		    %EXPORT_TAGS $CLONE_SUPPORT);
-   $VERSION     = sprintf( "%d.%02d", q($Revision: 0.07 $) =~ /\s(\d+)\.(\d+)/ );
+   $VERSION     = sprintf( "%d.%02d", q($Revision: 0.08 $) =~ /\s(\d+)\.(\d+)/ );
   @ISA         = qw(Exporter);
   @EXPORT      = qw();
   @EXPORT_OK   = qw( merge _hashify _merge_hashes );
