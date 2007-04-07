@@ -1,256 +1,192 @@
-#!/usr/bin/perl -w
-
 package Hash::Merge;
 
-#=============================================================================
-#
-# $Id: Merge.pm,v 0.07 2002/02/19 00:21:27 mneylon Exp $
-# $Revision: 0.07 $
-# $Author: mneylon $
-# $Date: 2002/02/19 00:21:27 $
-# $Log: Merge.pm,v $
-# Revision 0.08  2006/08/08 21:46:00  mneylon
-# Fixed hash referencing issue with perl 5.8.8 in test sequence 
-#
-# Revision 0.07  2002/02/19 00:21:27  mneylon
-# Fixed problem with ActiveState Perl's Clone.pm implementation.
-# Fixed typo in POD.
-# Fixed formatting of code in general.
-#
-# Revision 0.06.01.2  2002/02/17 03:18:20  mneylon
-# Fixed problem with ActiveState Perl's Clone.pm implementation.
-# Fixed typo in POD.
-# Fixed formatting of code in general.
-#
-# Revision 0.06.01.1  2002/02/17 02:48:54  mneylon
-# Branched version.
-#
-# Revision 0.06  2001/11/10 03:30:34  mneylon
-# Version 0.06 release (and more CVS fixes)
-#
-# Revision 0.05.02.2  2001/11/10 03:22:58  mneylon
-# Updated documentation
-#
-# Revision 0.05.02.1  2001/11/08 00:14:48  mneylon
-# Fixing CVS problems
-#
-# Revision 0.05.01.1  2001/11/06 03:26:56  mneylon
-# Fixed some undefined variable problems for 5.005.
-# Added cloning of data and set/get_clone_behavior functions
-# Added associated testing of data cloning
-# Fixed some problems with POD
-#
-# Revision 0.05  2001/11/02 02:15:54  mneylon
-# Yet another fix to Test::More requirement (=> 0.33)
-#
-# Revision 0.04  2001/10/31 03:59:03  mneylon
-# Forced Test::More requirement in makefile
-# Fixed problems with pod documentation
-#
-# Revision 0.03  2001/10/28 23:36:12  mneylon
-# CPAN Release with CVS fixes
-#
-# Revision 0.02  2001/10/28 23:05:03  mneylon
-# CPAN release
-#
-# Revision 0.01.1.1  2001/10/23 03:01:34  mneylon
-# Slight fixes
-#
-# Revision 0.01  2001/10/23 03:00:21  mneylon
-# Initial Release to PerlMonks
-#
-#
-#=============================================================================
-
 use strict;
-use Clone qw(clone);
+use warnings;
+use Carp;
 
-BEGIN {
-  use Exporter   ();
-  use vars       qw($VERSION @ISA @EXPORT @EXPORT_OK 
-		    %EXPORT_TAGS $CLONE_SUPPORT);
-   $VERSION     = sprintf( "%d.%02d", q($Revision: 0.08 $) =~ /\s(\d+)\.(\d+)/ );
-  @ISA         = qw(Exporter);
-  @EXPORT      = qw();
-  @EXPORT_OK   = qw( merge _hashify _merge_hashes );
-  %EXPORT_TAGS  = ( custom => [ qw( _hashify _merge_hashes )] );
-  $CLONE_SUPPORT = ( $Clone::VERSION > 0.09 );
-  
-}
+use base 'Exporter';
+use vars qw($VERSION @ISA @EXPORT_OK %EXPORT_TAGS);
 
-my %left_precedent = (
-		      SCALAR => {
-				 SCALAR => sub { $_[0] },
-				 ARRAY  => sub { $_[0] },
-				 HASH   => sub { $_[0] } },
-		      ARRAY => {
-				SCALAR => sub { [ @{$_[0]}, $_[1] ] },
-				ARRAY  => sub { [ @{$_[0]}, @{$_[1]} ] },
-				HASH   => sub { [ @{$_[0]}, values %{$_[1]} ] } },
-		      HASH => {
-			       SCALAR => sub { $_[0] },
-			       ARRAY  => sub { $_[0] },
-			       HASH   => sub { _merge_hashes( $_[0], $_[1] ) } }
-		     );
+$VERSION     = sprintf( '%d.%02d', q($Revision: 0.09 $) =~ /\s(\d+)\.(\d+)/ );
+@EXPORT_OK   = qw( merge _hashify _merge_hashes );
+%EXPORT_TAGS = ( 'custom' => [ qw( _hashify _merge_hashes )] );
 
-my %right_precedent = (
-		       SCALAR => {
-				  SCALAR => sub { $_[1] },
-				  ARRAY  => sub { [ $_[0], @{$_[1]} ] },
-				  HASH   => sub { $_[1] } },
-		       ARRAY => {
-				 SCALAR => sub { $_[1] },
-				 ARRAY  => sub { [ @{$_[0]}, @{$_[1]} ] },
-				 HASH   => sub { $_[1] } },
-		       HASH => {
-				SCALAR => sub { $_[1] },
-				ARRAY  => sub { [ values %{$_[0]}, @{$_[1]} ] },
-				HASH   => sub { _merge_hashes( $_[0], $_[1] ) } }
-		      );
 
-my %storage_precedent = (
-			 SCALAR => {
-				    SCALAR => sub { $_[0] },
-				    ARRAY  => sub { [ $_[0], @{$_[1]} ] },
-				    HASH   => sub { $_[1] } },
-			 ARRAY => {
-				   SCALAR => sub { [ @{$_[0]}, $_[1] ] },
-				   ARRAY  => sub { [ @{$_[0]}, @{$_[1]} ] },
-				   HASH   => sub { $_[1] } },
-			 HASH => {
-				  SCALAR => sub { $_[0] },
-				  ARRAY  => sub { $_[0] },
-				  HASH   => sub { _merge_hashes( $_[0], $_[1] ) } }
-			);
-
-my %retainment_precedent = (
-			    SCALAR => {
-				       SCALAR => sub { [ $_[0], $_[1] ] },
-				       ARRAY  => sub { [ $_[0], @{$_[1]} ] },
-				       HASH   => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) } },
-			    ARRAY => {
-				      SCALAR => sub { [ @{$_[0]}, $_[1] ] },
-				      ARRAY  => sub { [ @{$_[0]}, @{$_[1]} ] },
-				      HASH   => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) } },
-			    HASH => {
-				     SCALAR => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
-				     ARRAY  => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
-				     HASH   => sub { _merge_hashes( $_[0], $_[1] ) } }
-			   );
-
-my %behaviors = (
-		 LEFT_PRECEDENT => \%left_precedent,
-		 RIGHT_PRECEDENT => \%right_precedent,
-		 STORAGE_PRECEDENT => \%storage_precedent,
-		 RETAINMENT_PRECEDENT => \%retainment_precedent 
-		);
+my $behaviors = {
+    'LEFT_PRECEDENT' => {
+        'SCALAR' => {
+            'SCALAR' => sub { $_[0] },
+            'ARRAY'  => sub { $_[0] },
+            'HASH'   => sub { $_[0] }, 
+        },
+        'ARRAY' => {
+            'SCALAR' => sub { [ @{$_[0]}, $_[1] ] },
+            'ARRAY'  => sub { [ @{$_[0]}, @{$_[1]} ] },
+            'HASH'   => sub { [ @{$_[0]}, values %{$_[1]} ] }, 
+        },
+        'HASH' => {
+            'SCALAR' => sub { $_[0] },
+            'ARRAY'  => sub { $_[0] },
+            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) }, 
+        },
+    },
+    
+    'RIGHT_PRECEDENT' => {
+        'SCALAR' => {
+            'SCALAR' => sub { $_[1] },
+            'ARRAY'  => sub { [ $_[0], @{$_[1]} ] },
+            'HASH'   => sub { $_[1] }, 
+        },
+        'ARRAY' => {
+            'SCALAR' => sub { $_[1] },
+            'ARRAY'  => sub { [ @{$_[0]}, @{$_[1]} ] },
+            'HASH'   => sub { $_[1] }, 
+        },
+        'HASH' => {
+            'SCALAR' => sub { $_[1] },
+            'ARRAY'  => sub { [ values %{$_[0]}, @{$_[1]} ] },
+            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) }, 
+        },
+    },
+    
+    'STORAGE_PRECEDENT' => {
+        'SCALAR' => {
+            'SCALAR' => sub { $_[0] },
+            'ARRAY'  => sub { [ $_[0], @{$_[1]} ] },
+            'HASH'   => sub { $_[1] }, 
+        },
+        'ARRAY' => {
+            'SCALAR' => sub { [ @{$_[0]}, $_[1] ] },
+            'ARRAY'  => sub { [ @{$_[0]}, @{$_[1]} ] },
+            'HASH'   => sub { $_[1] }, 
+        },
+        'HASH' => {
+            'SCALAR' => sub { $_[0] },
+            'ARRAY'  => sub { $_[0] },
+            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) }, 
+        },
+    },
+    
+    'RETAINMENT_PRECEDENT' => {
+        'SCALAR' => {
+            'SCALAR' => sub { [ $_[0], $_[1] ] },
+            'ARRAY'  => sub { [ $_[0], @{$_[1]} ] },
+            'HASH'   => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) },
+        },
+        'ARRAY' => {
+            'SCALAR' => sub { [ @{$_[0]}, $_[1] ] },
+            'ARRAY'  => sub { [ @{$_[0]}, @{$_[1]} ] },
+            'HASH'   => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) }, 
+        },
+        'HASH' => {
+            'SCALAR' => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
+            'ARRAY'  => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
+            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) }, 
+        },
+    },
+};
 
 my $merge_behavior = 'LEFT_PRECEDENT';
-my $merge_matrix = \%{ $behaviors{ $merge_behavior } };
-
+my $merge_matrix   = $behaviors->{ $merge_behavior };
 my $clone_behavior = 1;
 
 sub set_behavior {
-  my $value = uc(shift);
-  die "Behavior must be one of : " , join ' ', keys %behaviors 
-    unless exists $behaviors{ $value };
-  $merge_behavior = $value;
-  $merge_matrix = \%{ $behaviors{ $merge_behavior } };
+    my $value = uc(shift);
+    if( !exists $behaviors->{ $value } ) {
+        carp 'Behavior must be one of : ' . join( ', ', keys %{ $behaviors } );
+        return;
+    }
+    
+    $merge_behavior = $value;
+    $merge_matrix   = $behaviors->{ $merge_behavior };
 }
 
 sub get_behavior {
-  return $merge_behavior;
+    return $merge_behavior;
 }
 
 sub specify_behavior {
-  my $matrix = shift;
-  my $name = shift || "user defined";
-  my @required = qw ( SCALAR ARRAY HASH );
+    my ( $matrix, $name ) = @_;
+    $name |= 'user defined';
+    
+    my @required = qw( SCALAR ARRAY HASH );
   
-  foreach my $left ( @required ) {
-    foreach my $right ( @required ) {
-      die "Behavior does not specify action for $left merging with $right"
-	unless exists $matrix->{ $left }->{ $right };
+    foreach my $left ( @required ) {
+        foreach my $right ( @required ) {
+            if( !exists $matrix->{ $left }->{ $right } ) {
+                carp "Behavior does not specify action for '$left' merging with '$right'";
+                return;
+            }
+        }
     }
-  }
   
-  $merge_behavior = $name;
-  $merge_matrix = $matrix;
+    $merge_behavior = $name;
+    $merge_matrix   = $matrix;
 }
 
 sub set_clone_behavior {
-  my $temp = shift;
-  $clone_behavior = ( $temp ) ? 1 : 0;
+    $clone_behavior = shift() ? 1 : 0;
 }
 
 sub get_clone_behavior {
-  return $clone_behavior;
+    return $clone_behavior;
 }
 
 sub merge {
-  my ( $left, $right ) = ( shift, shift );
-  
-  # For the general use of this module, we want to create duplicates
-  # of all data that is merged.  This behavior can be shut off, but 
-  # can mess havoc if references are used heavily.
-  
-  my ( $lefttype, $righttype );
-  if ( !defined( $left ) ) {		# Perl 5.005 compatibility
-    $lefttype = 'SCALAR';
-  } elsif ( UNIVERSAL::isa( $left, 'HASH' ) ) { 
-    $lefttype = 'HASH';
-  } elsif ( UNIVERSAL::isa( $left, 'ARRAY' ) ) {
-    $lefttype = 'ARRAY';
-  } else {
-    $lefttype = 'SCALAR';
-  }
-  
-  if ( !defined( $right ) ) {		# Perl 5.005 compatibility
-    $righttype = 'SCALAR';
-  } elsif ( UNIVERSAL::isa( $right, 'HASH' ) ) { 
-    $righttype = 'HASH';
-  } elsif ( UNIVERSAL::isa( $right, 'ARRAY' ) ) {
-    $righttype = 'ARRAY';
-  } else {
-    $righttype = 'SCALAR';
-  }
-  
-  if ( $clone_behavior ) {
-    $left = _my_clone ( $left, 1 ); 
-    $right = _my_clone ( $right, 1 );
-  }
-  
-  return &{ $merge_matrix->{ $lefttype }->{ $righttype }}
-    ( $left, $right );
+    my ( $left, $right ) = @_;
+
+    # For the general use of this module, we want to create duplicates
+    # of all data that is merged.  This behavior can be shut off, but 
+    # can mess havoc if references are used heavily.
+
+    my $lefttype = ref $left eq 'HASH'  ? 'HASH'
+                 : ref $left eq 'ARRAY' ? 'ARRAY'
+                 :                        'SCALAR'
+                 ;
+
+    my $righttype = ref $right eq 'HASH'  ? 'HASH'
+                  : ref $right eq 'ARRAY' ? 'ARRAY'
+                  :                         'SCALAR'
+                  ;
+
+    if ( $clone_behavior ) {
+        $left  = _my_clone( $left,  1 ); 
+        $right = _my_clone( $right, 1 );
+    }
+
+    return $merge_matrix->{ $lefttype }{ $righttype }->( $left, $right );
 }	
 
 # This does a straight merge of hashes, delegating the merge-specific 
 # work to 'merge'
 
 sub _merge_hashes {
-  my ( $left, $right ) = ( shift, shift );
-  die "Arguments for _merge_hashes must be hash references" unless 
-    UNIVERSAL::isa( $left, 'HASH' ) && UNIVERSAL::isa( $right, 'HASH' );
-  
-  my %newhash;
-  foreach my $leftkey ( keys %$left ) {
-    if ( exists $right->{ $leftkey } ) {
-      $newhash{ $leftkey } = 
-	merge ( $left->{ $leftkey }, $right->{ $leftkey } )
-      } else {
-	$newhash{ $leftkey } = 
-	  ( $clone_behavior ) ? _my_clone( $left->{ $leftkey } )
-	    : $left->{ $leftkey };
-      }
-  }
-  foreach my $rightkey ( keys %$right ) { 
-    if ( !exists $left->{ $rightkey } ) {
-      $newhash{ $rightkey } = 
-	( $clone_behavior ) ? _my_clone( $right->{ $rightkey } )
-	  : $right->{ $rightkey };
+    my ( $left, $right ) = ( shift, shift );
+    if( ref $left ne 'HASH' || ref $right ne 'HASH' ) {
+        carp 'Arguments for _merge_hashes must be hash references';
+        return;
     }
-  }
-  return \%newhash;
+
+    my %newhash;
+    foreach my $leftkey ( keys %$left ) {
+        if ( exists $right->{ $leftkey } ) {
+            $newhash{ $leftkey } 
+                = merge ( $left->{ $leftkey }, $right->{ $leftkey } );
+        } 
+        else {
+            $newhash{ $leftkey } = $clone_behavior 
+                ? _my_clone( $left->{ $leftkey } ) : $left->{ $leftkey };
+        }
+    }
+    
+    foreach my $rightkey ( keys %$right ) { 
+        if ( !exists $left->{ $rightkey } ) {
+            $newhash{ $rightkey } = $clone_behavior 
+                ? _my_clone( $right->{ $rightkey } ) : $right->{ $rightkey };
+        }
+    }
+    
+    return \%newhash;
 }
 
 # Given a scalar or an array, creates a new hash where for each item in
@@ -258,24 +194,27 @@ sub _merge_hashes {
 # this new hash
 
 sub _hashify {
-  my $arg = shift;
-  die "Arguement for _hashify must not be a HASH ref" if
-    UNIVERSAL::isa( $arg, 'HASH' );
-  
-  my %newhash;
-  if ( UNIVERSAL::isa( $arg, 'ARRAY' ) ) {
-    foreach my $item ( @$arg ) {
-      my $suffix = 2;
-      my $name = $item;
-      while ( exists $newhash{ $name } ) {
-	$name = $item . $suffix++;
-      }
-      $newhash{ $name } = $item;
+    my $arg = shift;
+    if( ref $arg eq 'HASH' ) {
+        carp 'Arguement for _hashify must not be a HASH ref';
+        return;
     }
-  } else {
-    $newhash{ $arg } = $arg;
-  }
-  return \%newhash;
+   
+    my %newhash;
+    if ( ref $arg eq 'ARRAY' ) {
+        foreach my $item ( @$arg ) {
+            my $suffix = 2;
+            my $name = $item;
+            while ( exists $newhash{ $name } ) {
+	            $name = $item . $suffix++;
+            }
+            $newhash{ $name } = $item;
+        }
+    } 
+    else {
+        $newhash{ $arg } = $arg;
+    }
+    return \%newhash;
 }
 
 # This adds some checks to the clone process, to deal with problems that 
@@ -286,22 +225,31 @@ sub _hashify {
 # not a HASH or ARRAY won't be cloned.
 
 sub _my_clone {
-  my ( $arg, $depth ) = @_;
-  if ( !$CLONE_SUPPORT && 
-       !UNIVERSAL::isa( $arg, 'HASH' ) && 
-       !UNIVERSAL::isa( $arg, 'ARRAY' )) { 
-      my $var = $arg; # Forced clone
-      return $var;
-  } else {
-    if ($depth ) {
-      return clone( $arg, $depth );
-    } else {
-      return clone( $arg );
+    my ( $arg, $depth ) = @_;
+
+    if( $clone_behavior ) {
+        require Clone;
     }
-  }
+
+    if ( !($Clone::VERSION || 0) > 0.09 
+         && ref $arg ne 'HASH' 
+         && ref $arg ne 'ARRAY'
+    ) { 
+        my $var = $arg; # Forced clone
+        return $var;
+    } 
+    else {
+        if ($depth ) {
+            return Clone::clone( $arg, $depth );
+        } 
+        else {
+            return Clone::clone( $arg );
+        }
+    }
 }
 
 1;
+
 __END__
 
 =head1 NAME
@@ -510,49 +458,5 @@ Copyright (c) 2001,2002 Michael K. Neylon. All rights reserved.
 
 This library is free software.  You can redistribute it and/or modify it 
 under the same terms as Perl itself.
-
-=head1 HISTORY
-
-	$Log: Merge.pm,v $
-	Revision 0.07  2002/02/19 00:21:27  mneylon
-	Fixed problem with ActiveState Perl's Clone.pm implementation.
-	Fixed typo in POD.
-	Fixed formatting of code in general.
-	
-	Revision 0.06.01.2  2002/02/17 03:18:20  mneylon
-	Fixed problem with ActiveState Perl's Clone.pm implementation.
-	Fixed typo in POD.
-	Fixed formatting of code in general.
-	
-	Revision 0.06.01.1  2002/02/17 02:48:54  mneylon
-	Branched version.
-	
-	Revision 0.06  2001/11/10 03:30:34  mneylon
-	Version 0.06 release (and more CVS fixes)
-	
-	Revision 0.05.02.2  2001/11/10 03:22:58  mneylon
-	Updated documentation
-	
-	Revision 0.05.02.1  2001/11/08 00:14:48  mneylon
-	Fixing CVS problems
-	
-	Revision 0.05.01.1  2001/11/06 03:26:56  mneylon
-	Fixed some undefined variable problems for 5.005.
-	Added cloning of data and set/get_clone_behavior functions
-	Added associated testing of data cloning
-	Fixed some problems with POD
-	
-	Revision 0.05  2001/11/02 02:15:54  mneylon
-	Yet another fix to Test::More requirement (=> 0.33)
-
-	Revision 0.04  2001/10/31 03:59:03  mneylon
-	Forced Test::More requirement in makefile
-	Fixed problems with pod documentation
-
-	Revision 0.03  2001/10/28 23:36:12  mneylon
-	CPAN Release with CVS fixes
-
-	Revision 0.02  2001/10/28 23:05:03  mneylon
-	CPAN release
 
 =cut
