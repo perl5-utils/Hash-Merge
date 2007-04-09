@@ -1,4 +1,4 @@
-Hash/Merge version $Revision: 0.09 $
+Hash/Merge version $Revision: 0.10 $
 =========================================
 
 Hash::Merge merges two arbitrarily deep hashes into a single hash.  That
@@ -37,3 +37,4 @@ Thanks to:
 - Chuck Charbeneau for pointing out interference bugs from ActiveState
 - Jeff Fitzgibbon for pointing out inconsistance typo in POD
 - Daniel Muey for the v0.09 refactor to clean up the code
+- Daniel Muey for the v0.10 clean up the POD Synopsis

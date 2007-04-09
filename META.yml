@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Hash-Merge
-version:      0.09
+version:      0.10
 version_from: Merge.pm
 installdirs:  site
 requires:

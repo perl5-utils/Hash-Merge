@@ -1,5 +1,9 @@
 Revision history for Perl extension Hash::Merge.
 
+0.10  Sun Apr  8 23:26:12 2007
+    - DMUEY rt.cpan.org id 13390
+    - POD Synopsis cleanup
+
 0.09  Tue Apr  3 20:48:21 2007
     - DMUEY: Merge.pm - refactored code as per rt.cpan.org id 26076 (passes all tests)
     - DMUEY: removed 'HISTORY' from POD since its in the Changes file (IE less room to get the data out of sync)

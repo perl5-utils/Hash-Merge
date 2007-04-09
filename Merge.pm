@@ -7,7 +7,7 @@ use Carp;
 use base 'Exporter';
 use vars qw($VERSION @ISA @EXPORT_OK %EXPORT_TAGS);
 
-$VERSION     = sprintf( '%d.%02d', q($Revision: 0.09 $) =~ /\s(\d+)\.(\d+)/ );
+$VERSION     = sprintf( '%d.%02d', q($Revision: 0.10 $) =~ /\s(\d+)\.(\d+)/ );
 @EXPORT_OK   = qw( merge _hashify _merge_hashes );
 %EXPORT_TAGS = ( 'custom' => [ qw( _hashify _merge_hashes )] );
 
@@ -258,34 +258,44 @@ Hash::Merge - Merges arbitrarily deep hashes into a single hash
 
 =head1 SYNOPSIS
 
-  use Hash::Merge qw( merge );
-  my %a = ( foo => 1,
-            bar => [ a, b, e ],
-		    querty => { bob => alice } );
-  my %b = ( foo => 2, 
-            bar => [ c, d ],
-			querty => { ted => margeret } );
+    use Hash::Merge qw( merge );
+    my %a = ( 
+		'foo'    => 1,
+	    'bar'    => [ qw( a b e ) ],
+	    'querty' => { 'bob' => 'alice' },
+	);
+    my %b = ( 
+		'foo'     => 2, 
+		'bar'    => [ qw(c d) ],
+		'querty' => { 'ted' => 'margeret' }, 
+	);
 
-  my %c = %{ merge( \%a, \%b ) };
+    my %c = %{ merge( \%a, \%b ) };
 
-  Hash::Merge::set_behavior( RIGHT_PRECEDENT );
+    Hash::Merge::set_behavior( 'RIGHT_PRECEDENT' );
 
-  # This is the same as above
+    # This is the same as above
 
-  Hash::Merge::specify_behavior( {
-  	SCALAR => {
-		SCALAR => sub { $_[1] },
-		ARRAY  => sub { [ $_[0], @{$_[1]} ] },
-		HASH   => sub { $_[1] } },
-	ARRAY => {
-		SCALAR => sub { $_[1] },
-		ARRAY  => sub { [ @{$_[0]}, @{$_[1]} ] },
-		HASH   => sub { $_[1] } },
-	HASH => {
-		SCALAR => sub { $_[1] },
-		ARRAY  => sub { [ values %{$_[0]}, @{$_[1]} ] },
-		HASH   => sub { Hash::Merge::_merge_hashes( $_[0], $_[1] ) } }
-  }, "My Behavior" );
+	Hash::Merge::specify_behavior(
+	    {
+			'SCALAR' => {
+				'SCALAR' => sub { $_[1] },
+				'ARRAY'  => sub { [ $_[0], @{$_[1]} ] },
+				'HASH'   => sub { $_[1] },
+			},
+			'ARRAY => {
+				'SCALAR' => sub { $_[1] },
+				'ARRAY'  => sub { [ @{$_[0]}, @{$_[1]} ] },
+				'HASH'   => sub { $_[1] }, 
+			},
+			'HASH' => {
+				'SCALAR' => sub { $_[1] },
+				'ARRAY'  => sub { [ values %{$_[0]}, @{$_[1]} ] },
+				'HASH'   => sub { Hash::Merge::_merge_hashes( $_[0], $_[1] ) }, 
+			},
+		}, 
+		'My Behavior', 
+	);
 
 =head1 DESCRIPTION
 
