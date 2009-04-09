@@ -1,5 +1,8 @@
 Revision history for Perl extension Hash::Merge.
 
+0.11 Thu Apr  9 08:32:12 2009
+    - fix ||= typo, thanks GWADEJ or bringing it to my attention
+    
 0.10  Sun Apr  8 23:26:12 2007
     - DMUEY rt.cpan.org id 13390
     - POD Synopsis cleanup

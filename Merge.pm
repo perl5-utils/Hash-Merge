@@ -7,7 +7,7 @@ use Carp;
 use base 'Exporter';
 use vars qw($VERSION @ISA @EXPORT_OK %EXPORT_TAGS);
 
-$VERSION     = sprintf( '%d.%02d', q($Revision: 0.10 $) =~ /\s(\d+)\.(\d+)/ );
+$VERSION     = sprintf( '%d.%02d', q($Revision: 0.11 $) =~ /\s(\d+)\.(\d+)/ );
 @EXPORT_OK   = qw( merge _hashify _merge_hashes );
 %EXPORT_TAGS = ( 'custom' => [ qw( _hashify _merge_hashes )] );
 
@@ -107,7 +107,7 @@ sub get_behavior {
 
 sub specify_behavior {
     my ( $matrix, $name ) = @_;
-    $name |= 'user defined';
+    $name ||= 'user defined';
     
     my @required = qw( SCALAR ARRAY HASH );
   
