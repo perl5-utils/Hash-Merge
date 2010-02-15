@@ -1,8 +1,19 @@
 Revision history for Perl extension Hash::Merge.
 
-0.11 Thu Apr  9 08:32:12 2009
-    - fix ||= typo, thanks GWADEJ or bringing it to my attention
+0.12  Mon Feb 15 19:23:52 CST 2010
+    Thanks to MONS for addressing these:
+    - rt 39183 fallback to Clone::PP if needed/possible
+    - rt 43056 OO support for more sane behavior non-trampling
     
+    This version is a cleaned up version of MONS' patch in rt 43056 plus:
+    
+    Added tests for OO behavior.
+    Cleaned up POD a little
+    perltidy
+    
+0.11  Thu Apr  9 08:32:12 2009
+    - fix ||= typo, thanks GWADEJ or bringing it to my attention
+
 0.10  Sun Apr  8 23:26:12 2007
     - DMUEY rt.cpan.org id 13390
     - POD Synopsis cleanup

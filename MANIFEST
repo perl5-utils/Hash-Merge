@@ -4,4 +4,5 @@ MANIFEST
 Merge.pm
 README
 t/merge.t
+t/oo.t
 META.yml                                 Module meta-data (added by MakeMaker)
