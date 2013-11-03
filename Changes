@@ -1,69 +1,69 @@
 Revision history for Perl extension Hash::Merge.
 
-0.12  Mon Feb 15 19:23:52 CST 2010
-    Thanks to MONS for addressing these:
-    - rt 39183 fallback to Clone::PP if needed/possible
-    - rt 43056 OO support for more sane behavior non-trampling
+0.200	2013-11-03
+    - modernize toolchain
+    - reformat changes as per CPAN::Changes::Spec
+    - move repository to GitHub
+
+0.12	2010-02-15
+    - rt 39183 fallback to Clone::PP if needed/possible (thanks to MONS)
+    - rt 43056 OO support for more sane behavior non-trampling (thanks to MONS)
     
-    This version is a cleaned up version of MONS' patch in rt 43056 plus:
+    - Added tests for OO behavior.
+    - Cleaned up POD a little
+    - perltidy
     
-    Added tests for OO behavior.
-    Cleaned up POD a little
-    perltidy
-    
-0.11  Thu Apr  9 08:32:12 2009
+0.11	2009-04-09
     - fix ||= typo, thanks GWADEJ or bringing it to my attention
 
-0.10  Sun Apr  8 23:26:12 2007
+0.10	2007-04-08
     - DMUEY rt.cpan.org id 13390
     - POD Synopsis cleanup
 
-0.09  Tue Apr  3 20:48:21 2007
-    - DMUEY: Merge.pm - refactored code as per rt.cpan.org id 26076 (passes all tests)
-    - DMUEY: removed 'HISTORY' from POD since its in the Changes file (IE less room to get the data out of sync)
+0.09	2007-04-03
+    - DMUEY: Merge.pm - refactored code as per rt.cpan.org id 26076
+      (passes all tests)
+    - DMUEY: removed 'HISTORY' from POD since its in the Changes file
+      (IE less room to get the data out of sync)
     - DMUEY: Makefile.PL - general cleanup, note pinned to Clone prereq
     - DMUEY: README: Updated version from 0.07 to 0.09
 
-$Log: Changes,v $
-Revision 0.08  2006/08/08 21:46:00  mneylon
-Fixed hash reference issue (per Perl 5.8.8) in test sequence
 
-Revision 0.07  2002/02/19 00:21:27  mneylon
-Fixed problem with ActiveState Perl's Clone.pm implementation.
-Fixed typo in POD.
-Fixed formatting of code in general.
+0.08	2006-08-08
+    - Fixed hash reference issue (per Perl 5.8.8) in test sequence
 
-Revision 0.06.01.1  2002/02/17 02:48:54  mneylon
-Branched version.
+0.07	2002-02-19
+    - Fixed problem with ActiveState Perl's Clone.pm implementation.
+    - Fixed typo in POD.
+    - Fixed formatting of code in general.
 
-Revision 0.06  2001/11/10 03:30:34  mneylon
-Version 0.06 release (and more CVS fixes)
+0.06	2001-11-10
+    - Version 0.06 release (and more CVS fixes)
 
-Revision 0.05.02.1  2001/11/08 00:14:47  mneylon
-Fixing CVS problems
+0.05.02.1	2001-11-08
+    - Fixing CVS problems
 
-Revision 0.05.01.2  2001/11/06 03:26:56  mneylon
-Fixed some undefined variable problems for 5.005.
-Added cloning of data and set/get_clone_behavior functions
-Added associated testing of data cloning
-Fixed some problems with POD
+0.05.01.2	2001-11-06
+    - Fixed some undefined variable problems for 5.005.
+    - Added cloning of data and set/get_clone_behavior functions
+    - Added associated testing of data cloning
+    - Fixed some problems with POD
 
-Revision 0.05  2001/11/02 02:15:54  mneylon
-Yet another fix to Test::More requirement (=> 0.33)
+0.05	2001-11-02
+    - Yet another fix to Test::More requirement (=> 0.33)
 
-Revision 0.04  2001/10/31 03:59:03  mneylon
-Forced Test::More requirement in makefile
-Fixed problems with pod documentation
+0.04	2001-10-31
+    - Forced Test::More requirement in makefile
+    - Fixed problems with pod documentation
 
-Revision 0.03  2001/10/28 23:36:12  mneylon
-CPAN Release with CVS fixes
+0.03	2001-10-28
+    - CPAN Release with CVS fixes
 
-Revision 0.02  2001/10/28 23:05:03  mneylon
-CPAN release
+0.02	2001-10-28 23:05:03
+    - CPAN release
 
-Revision 0.01.1.1  2001/10/23 03:01:34  mneylon
-Slight fixes
+0.01.1.1  2001/10/23 03:01:34  mneylon
+    - Slight fixes
 
-Revision 0.01  2001/10/23 03:00:21  mneylon
-Initial Release to PerlMonks
-
+0.01  2001/10/23 03:00:21  mneylon
+    - Initial Release to PerlMonks
