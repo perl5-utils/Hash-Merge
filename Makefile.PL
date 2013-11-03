@@ -22,7 +22,7 @@ WriteMakefile1(
                 META_ADD         => {
                             'meta-spec' => { version => 2 },
                             resources   => {
-                                repository => 'https://github.com/perl5-utils/File-ConfigDir-Plack',
+                                repository => 'https://github.com/perl5-utils/Hash-Merge',
                                 license    => 'http://dev.perl.org/licenses/',
                             },
                             prereqs => {
