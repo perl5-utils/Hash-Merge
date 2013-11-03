@@ -9,7 +9,7 @@ use vars qw($VERSION @ISA @EXPORT_OK %EXPORT_TAGS $context);
 
 my ( $GLOBAL, $clone );
 
-$VERSION     = '0.200';
+$VERSION     = '0.201';
 @EXPORT_OK   = qw( merge _hashify _merge_hashes );
 %EXPORT_TAGS = ( 'custom' => [qw( _hashify _merge_hashes )] );
 
