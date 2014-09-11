@@ -32,7 +32,7 @@ $GLOBAL->{'behaviors'} = {
         'HASH' => {
             'SCALAR' => sub { $_[0] },
             'ARRAY'  => sub { $_[0] },
-            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
+            'HASH'   => sub { _merge_hashes( $_[0], $_[1], $_[2] ) },
         },
     },
 
@@ -50,7 +50,7 @@ $GLOBAL->{'behaviors'} = {
         'HASH' => {
             'SCALAR' => sub { $_[1] },
             'ARRAY'  => sub { [ values %{ $_[0] }, @{ $_[1] } ] },
-            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
+            'HASH'   => sub { _merge_hashes( $_[0], $_[1], $_[2] ) },
         },
     },
 
@@ -68,7 +68,7 @@ $GLOBAL->{'behaviors'} = {
         'HASH' => {
             'SCALAR' => sub { $_[0] },
             'ARRAY'  => sub { $_[0] },
-            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
+            'HASH'   => sub { _merge_hashes( $_[0], $_[1], $_[2] ) },
         },
     },
 
@@ -76,17 +76,17 @@ $GLOBAL->{'behaviors'} = {
         'SCALAR' => {
             'SCALAR' => sub { [ $_[0],                          $_[1] ] },
             'ARRAY'  => sub { [ $_[0],                          @{ $_[1] } ] },
-            'HASH'   => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) },
+            'HASH'   => sub { _merge_hashes( _hashify( $_[0] ), $_[1], $_[2] ) },
         },
         'ARRAY' => {
             'SCALAR' => sub { [ @{ $_[0] },                     $_[1] ] },
             'ARRAY'  => sub { [ @{ $_[0] },                     @{ $_[1] } ] },
-            'HASH'   => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) },
+            'HASH'   => sub { _merge_hashes( _hashify( $_[0] ), $_[1], $_[2] ) },
         },
         'HASH' => {
-            'SCALAR' => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
-            'ARRAY'  => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
-            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
+            'SCALAR' => sub { _merge_hashes( $_[0], _hashify( $_[1] ), $_[2] ) },
+            'ARRAY'  => sub { _merge_hashes( $_[0], _hashify( $_[1] ), $_[2] ) },
+            'HASH'   => sub { _merge_hashes( $_[0], $_[1], $_[2] ) },
         },
     },
 };
@@ -170,10 +170,22 @@ sub get_clone_behavior {
     return $self->{'clone'};
 }
 
+sub set_path_behavior {
+    my $self     = &_get_obj;          # '&' + no args modifies current @_
+    my $oldvalue = $self->{'path'};
+    $self->{'path'} = shift() ? 1 : 0;
+    return $oldvalue;
+}
+
+sub get_path_behavior {
+    my $self = &_get_obj;              # '&' + no args modifies current @_
+    return $self->{'path'};
+}
+
 sub merge {
     my $self = &_get_obj;              # '&' + no args modifies current @_
 
-    my ( $left, $right ) = @_;
+    my ( $left, $right, $path ) = @_;
 
     # For the general use of this module, we want to create duplicates
     # of all data that is merged.  This behavior can be shut off, but
@@ -195,7 +207,7 @@ sub merge {
     }
 
     local $context = $self;
-    return $self->{'matrix'}->{$lefttype}{$righttype}->( $left, $right );
+    return $self->{'matrix'}->{$lefttype}{$righttype}->( $left, $right, $path );
 }
 
 # This does a straight merge of hashes, delegating the merge-specific
@@ -204,16 +216,23 @@ sub merge {
 sub _merge_hashes {
     my $self = &_get_obj;    # '&' + no args modifies current @_
 
-    my ( $left, $right ) = ( shift, shift );
+    my ( $left, $right, $path ) = ( shift, shift, shift );
     if ( ref $left ne 'HASH' || ref $right ne 'HASH' ) {
         carp 'Arguments for _merge_hashes must be hash references';
         return;
     }
 
+    $path = '' if !defined $path;
+
     my %newhash;
     foreach my $leftkey ( keys %$left ) {
-        if ( exists $right->{$leftkey} ) {
-            $newhash{$leftkey} = $self->merge( $left->{$leftkey}, $right->{$leftkey} );
+        my $new_path = $path . '/' . $leftkey;
+
+        if ( $self->get_path_behavior && exists $self->{'matrix'}{'paths'}{$new_path} ) {
+            $newhash{$leftkey} = $self->{'matrix'}{'paths'}{$new_path}->( $left->{$leftkey}, $right->{$leftkey}, $new_path );
+        }
+        elsif ( exists $right->{$leftkey} ) {
+            $newhash{$leftkey} = $self->merge( $left->{$leftkey}, $right->{$leftkey}, $new_path );
         }
         else {
             $newhash{$leftkey} = $self->{clone} ? $self->_my_clone( $left->{$leftkey} ) : $left->{$leftkey};
@@ -221,7 +240,12 @@ sub _merge_hashes {
     }
 
     foreach my $rightkey ( keys %$right ) {
-        if ( !exists $left->{$rightkey} ) {
+        my $new_path = $path . '/' . $rightkey;
+
+        if ( $self->get_path_behavior && !exists $left->{$rightkey} && exists $self->{'matrix'}{'paths'}{$new_path} ) {
+            $newhash{$rightkey} = $self->{'matrix'}{'paths'}{$new_path}->( $left, $right, $new_path );
+        }
+        elsif ( !exists $left->{$rightkey} ) {
             $newhash{$rightkey} = $self->{clone} ? $self->_my_clone( $right->{$rightkey} ) : $right->{$rightkey};
         }
     }
@@ -465,6 +489,45 @@ whenever possible.  By default, cloning is on (set to true).
 =item get_clone_behavior( )
 
 Returns the current behavior for data cloning.
+
+=item set_path_behavior( <scalar> ) 
+
+Enable the support for paths. With paths, you can define exception rules
+for merging. E.g. generally you want ARRAY <-> ARRAY merging to include
+all elements from both sides, but for the arrays that belong to the key
+"override" the right side should win:
+
+  $left = {
+    test     => [1],
+    override => [1],
+  };
+
+  $right = {
+    test     => [2],
+    override => [2],
+  };
+
+  $result = {
+    test     => [1,2],
+    override => [2],
+  };
+
+For that case you can define a path:
+
+  specify_behavior({
+      # all the definitions for SCALAR <-> ... and HASH <-> ...
+      ARRAY => {
+          ARRAY => sub { [ @{ $_[0] }, @{ $_[1] } ] },
+          # Definitions for ARRAY <-> SCALAR and ARRAY <-> HASH
+      },
+      paths => {
+          '/override' => sub { $_[1] },
+      },
+  });
+
+=item get_path_behavior( )
+
+Returns the current behavior for path support.
 
 =item set_behavior( <scalar> )
 
