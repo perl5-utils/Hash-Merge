@@ -158,6 +158,23 @@ sub specify_behavior {
     $self->{'behaviors'}{$name} = $self->{'matrix'} = $matrix;
 }
 
+sub specify_behavior_part {
+    my $self = &_get_obj;
+
+    my ( $matrix, $name ) = @_;
+    $name ||= $self->{'behavior'};
+
+    if ( !exists $self->{'behaviors'}{$name} and !exists $GLOBAL->{'behaviors'}{$name} ) {
+        carp 'Behavior must be one of : ' . join( ', ', keys %{ $self->{'behaviors'} }, keys %{ $GLOBAL->{'behaviors'}{$name} } );
+        return;
+    }
+
+    my $merger     = Hash::Merge->new;
+    $merger->set_behavior( 'RIGHT_PRECEDENT' );
+    my $new_matrix = $merger->merge( $self->{'behaviors'}{$name} || $GLOBAL->{'behaviors'}{$name}, $matrix );
+    $self->{'behaviors'}{$name} = $self->{'matrix'} = $new_matrix;
+}
+
 sub set_clone_behavior {
     my $self     = &_get_obj;          # '&' + no args modifies current @_
     my $oldvalue = $self->{'clone'};
