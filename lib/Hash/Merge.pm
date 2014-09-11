@@ -510,6 +510,19 @@ behavior specification include:
 Note that you can import _hashify and _merge_hashes into your program's
 namespace with the 'custom' tag.
 
+=item specify_behavior_part( <hashref>, [<name>] )
+
+Specify only the parts of an existing behavior that should be changed.
+If you want to only change the merging behavior for SCALAR <-> SCALAR in
+the LEFT_PRECEDENT behavior, you can use
+
+  specify_behavior_part(
+    { SCALAR => { SCALAR => sub { $_[0] . '...' . $_[1] } } },
+    'LEFT_PRECEDENT'
+  );
+
+If the name is omitted, the current behavior is changed.
+
 =back
 
 =head1 BUILT-IN BEHAVIORS
