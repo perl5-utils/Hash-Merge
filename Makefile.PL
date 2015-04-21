@@ -7,6 +7,7 @@ use ExtUtils::MakeMaker;
 
 my %RUN_DEPS = (
                  'Clone' => 0,
+                 'Scalar::Util' => 0,
                );
 my %CONFIGURE_DEPS = (
                        'ExtUtils::MakeMaker' => 0,

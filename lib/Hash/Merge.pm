@@ -3,6 +3,7 @@ package Hash::Merge;
 use strict;
 use warnings;
 use Carp;
+use Scalar::Util qw( blessed );
 
 use base 'Exporter';
 use vars qw($VERSION @ISA @EXPORT_OK %EXPORT_TAGS $context);
@@ -97,7 +98,7 @@ $GLOBAL->{'clone'}    = 1;
 
 sub _get_obj {
     if ( my $type = ref $_[0] ) {
-        return shift() if $type eq __PACKAGE__ || eval { $_[0]->isa(__PACKAGE__) };
+        return shift() if $type eq __PACKAGE__ || (blessed $_[0] && $_[0]->isa(__PACKAGE__));
     }
 
     return $context;
