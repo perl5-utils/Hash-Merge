@@ -190,8 +190,8 @@ sub merge {
       :                         'SCALAR';
 
     if ( $self->{'clone'} ) {
-        $left  = _my_clone( $left,  1 );
-        $right = _my_clone( $right, 1 );
+        $left  = _my_clone( $left );
+        $right = _my_clone( $right );
     }
 
     local $context = $self;
@@ -269,7 +269,7 @@ sub _hashify {
 
 sub _my_clone {
     my $self = &_get_obj;    # '&' + no args modifies current @_
-    my ( $arg, $depth ) = @_;
+    my ( $arg ) = @_;
 
     if ( $self->{clone} && !$clone ) {
         if ( eval { require Clone; 1 } ) {
@@ -280,7 +280,7 @@ sub _my_clone {
                     my $var = shift;    # Forced clone
                     return $var;
                 }
-                Clone::clone( shift, $depth );
+                Clone::clone( shift );
             };
         }
         elsif ( eval { require Storable; 1 } ) {
@@ -294,7 +294,7 @@ sub _my_clone {
             $clone = sub {
                 my $var = shift;        # Forced clone
                 return $var if !ref($var);
-                Clone::PP::clone( $var, $depth );
+                Clone::PP::clone( $var );
             };
         }
         else {
