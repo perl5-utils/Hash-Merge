@@ -21,6 +21,7 @@ WriteMakefile1(
                 MIN_PERL_VERSION => '5.008001',
                 META_ADD         => {
                             'meta-spec' => { version => 2 },
+                            dynamic_config => 0,
                             resources   => {
                                 repository => 'https://github.com/perl5-utils/Hash-Merge',
                                 license    => 'http://dev.perl.org/licenses/',
