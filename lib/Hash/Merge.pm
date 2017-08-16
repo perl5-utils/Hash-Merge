@@ -118,11 +118,20 @@ sub new {
 
 sub set_behavior {
     my $self  = &_get_obj;    # '&' + no args modifies current @_
-    my $value = uc(shift);
-    if ( !exists $self->{'behaviors'}{$value} and !exists $GLOBAL->{'behaviors'}{$value} ) {
+    my $value = shift;
+
+    my @behaviors = grep { /$value/i } keys %{ $self->{'behaviors'} }, keys %{ $GLOBAL->{'behaviors'} };
+    if (scalar @behaviors == 0) {
         carp 'Behavior must be one of : ' . join( ', ', keys %{ $self->{'behaviors'} }, keys %{ $GLOBAL->{'behaviors'}{$value} } );
         return;
     }
+    if (scalar @behaviors > 1) {
+        croak 'Behavior must be unique in uppercase letters! You specified: ' . join ', ', @behaviors;
+    }
+    if (scalar @behaviors == 1 ) {
+        $value = $behaviors[0];
+    }
+
     my $oldvalue = $self->{'behavior'};
     $self->{'behavior'} = $value;
     $self->{'matrix'} = $self->{'behaviors'}{$value} || $GLOBAL->{'behaviors'}{$value};
