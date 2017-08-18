@@ -126,13 +126,15 @@ sub set_behavior {
     my $self  = &_get_obj;    # '&' + no args modifies current @_
     my $value = shift;
 
-    my @behaviors = grep {/$value/i} keys %{ $self->{'behaviors'} },
-        keys %{ $GLOBAL->{'behaviors'} };
+    my @behaviors
+        = grep {/$value/i}
+        map    { keys %{ $_->{'behaviors'} } }
+        ( $self == $GLOBAL ? ($self) : ( $self, $GLOBAL ) );
     if ( scalar @behaviors == 0 ) {
         carp 'Behavior must be one of : '
             . join( ', ',
-            keys %{ $self->{'behaviors'} },
-            keys %{ $GLOBAL->{'behaviors'}{$value} } );
+            map { keys %{ $_->{'behaviors'} } }
+                ( $self == $GLOBAL ? ($self) : ( $self, $GLOBAL ) ) );
         return;
     }
     if ( scalar @behaviors > 1 ) {
@@ -524,22 +526,6 @@ behavior specification include:
 Note that you can import _hashify and _merge_hashes into your program's
 namespace with the 'custom' tag.
 
-<<<<<<< HEAD
-=======
-=item specify_behavior_part( <hashref>, [<name>] )
-
-Specify only the parts of an existing behavior that should be changed.
-If you want to only change the merging behavior for SCALAR <-> SCALAR in
-the LEFT_PRECEDENT behavior, you can use
-
-   specify_behavior_part(
-       { SCALAR => { SCALAR => sub { $_[0] . '...' . $_[1] } } },
-       'LEFT_PRECEDENT'
-   );
-
-If the name is omitted, the current behavior is changed.back
-
->>>>>>> 1c463bf... Code: cleanup using perltidy
 =back
 
 =head1 BUILT-IN BEHAVIORS
