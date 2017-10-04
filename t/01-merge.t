@@ -1,6 +1,8 @@
-#!/usr/bin/perl -w
+#!perl
 
 use strict;
+use warnings;
+
 use Test::More tests => 45;
 use Hash::Merge qw( merge );
 
