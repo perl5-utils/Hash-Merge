@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Carp;
-use Clone::Choose;
+use Clone::Choose 0.002;
 use Scalar::Util qw( blessed );
 
 use base 'Exporter';
