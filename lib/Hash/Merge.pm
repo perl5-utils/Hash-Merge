@@ -2,101 +2,106 @@ package Hash::Merge;
 
 use strict;
 use warnings;
+
 use Carp;
+use Clone::Choose;
 use Scalar::Util qw( blessed );
 
 use base 'Exporter';
 use vars qw($VERSION @ISA @EXPORT_OK %EXPORT_TAGS $context);
 
-my ( $GLOBAL, $clone );
+my $GLOBAL;
 
 $VERSION     = '0.201';
 @EXPORT_OK   = qw( merge _hashify _merge_hashes );
 %EXPORT_TAGS = ( 'custom' => [qw( _hashify _merge_hashes )] );
 
-$GLOBAL = {};
-bless $GLOBAL, __PACKAGE__;
+BEGIN {
+    $GLOBAL = {};
+    bless $GLOBAL, __PACKAGE__;
 
 # $context is a variable for merge and _merge_hashes. used by functions to respect calling context
-$context = $GLOBAL;
+    $context = $GLOBAL;
 
-$GLOBAL->{'behaviors'} = {
-    'LEFT_PRECEDENT' => {
-        'SCALAR' => {
-            'SCALAR' => sub { $_[0] },
-            'ARRAY'  => sub { $_[0] },
-            'HASH'   => sub { $_[0] },
+    $GLOBAL->{'behaviors'} = {
+        'LEFT_PRECEDENT' => {
+            'SCALAR' => {
+                'SCALAR' => sub { $_[0] },
+                'ARRAY'  => sub { $_[0] },
+                'HASH'   => sub { $_[0] },
+            },
+            'ARRAY' => {
+                'SCALAR' => sub { [ @{ $_[0] }, $_[1] ] },
+                'ARRAY'  => sub { [ @{ $_[0] }, @{ $_[1] } ] },
+                'HASH'   => sub { [ @{ $_[0] }, values %{ $_[1] } ] },
+            },
+            'HASH' => {
+                'SCALAR' => sub { $_[0] },
+                'ARRAY'  => sub { $_[0] },
+                'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
+            },
         },
-        'ARRAY' => {
-            'SCALAR' => sub { [ @{ $_[0] }, $_[1] ] },
-            'ARRAY'  => sub { [ @{ $_[0] }, @{ $_[1] } ] },
-            'HASH'   => sub { [ @{ $_[0] }, values %{ $_[1] } ] },
-        },
-        'HASH' => {
-            'SCALAR' => sub { $_[0] },
-            'ARRAY'  => sub { $_[0] },
-            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
-        },
-    },
 
-    'RIGHT_PRECEDENT' => {
-        'SCALAR' => {
-            'SCALAR' => sub { $_[1] },
-            'ARRAY'  => sub { [ $_[0], @{ $_[1] } ] },
-            'HASH'   => sub { $_[1] },
+        'RIGHT_PRECEDENT' => {
+            'SCALAR' => {
+                'SCALAR' => sub { $_[1] },
+                'ARRAY'  => sub { [ $_[0], @{ $_[1] } ] },
+                'HASH'   => sub { $_[1] },
+            },
+            'ARRAY' => {
+                'SCALAR' => sub { $_[1] },
+                'ARRAY'  => sub { [ @{ $_[0] }, @{ $_[1] } ] },
+                'HASH'   => sub { $_[1] },
+            },
+            'HASH' => {
+                'SCALAR' => sub { $_[1] },
+                'ARRAY'  => sub { [ values %{ $_[0] }, @{ $_[1] } ] },
+                'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
+            },
         },
-        'ARRAY' => {
-            'SCALAR' => sub { $_[1] },
-            'ARRAY'  => sub { [ @{ $_[0] }, @{ $_[1] } ] },
-            'HASH'   => sub { $_[1] },
-        },
-        'HASH' => {
-            'SCALAR' => sub { $_[1] },
-            'ARRAY'  => sub { [ values %{ $_[0] }, @{ $_[1] } ] },
-            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
-        },
-    },
 
-    'STORAGE_PRECEDENT' => {
-        'SCALAR' => {
-            'SCALAR' => sub { $_[0] },
-            'ARRAY'  => sub { [ $_[0], @{ $_[1] } ] },
-            'HASH'   => sub { $_[1] },
+        'STORAGE_PRECEDENT' => {
+            'SCALAR' => {
+                'SCALAR' => sub { $_[0] },
+                'ARRAY'  => sub { [ $_[0], @{ $_[1] } ] },
+                'HASH'   => sub { $_[1] },
+            },
+            'ARRAY' => {
+                'SCALAR' => sub { [ @{ $_[0] }, $_[1] ] },
+                'ARRAY'  => sub { [ @{ $_[0] }, @{ $_[1] } ] },
+                'HASH'   => sub { $_[1] },
+            },
+            'HASH' => {
+                'SCALAR' => sub { $_[0] },
+                'ARRAY'  => sub { $_[0] },
+                'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
+            },
         },
-        'ARRAY' => {
-            'SCALAR' => sub { [ @{ $_[0] }, $_[1] ] },
-            'ARRAY'  => sub { [ @{ $_[0] }, @{ $_[1] } ] },
-            'HASH'   => sub { $_[1] },
-        },
-        'HASH' => {
-            'SCALAR' => sub { $_[0] },
-            'ARRAY'  => sub { $_[0] },
-            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
-        },
-    },
 
-    'RETAINMENT_PRECEDENT' => {
-        'SCALAR' => {
-            'SCALAR' => sub { [ $_[0], $_[1] ] },
-            'ARRAY'  => sub { [ $_[0], @{ $_[1] } ] },
-            'HASH' => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) },
+        'RETAINMENT_PRECEDENT' => {
+            'SCALAR' => {
+                'SCALAR' => sub { [ $_[0], $_[1] ] },
+                'ARRAY'  => sub { [ $_[0], @{ $_[1] } ] },
+                'HASH' => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) },
+            },
+            'ARRAY' => {
+                'SCALAR' => sub { [ @{ $_[0] }, $_[1] ] },
+                'ARRAY'  => sub { [ @{ $_[0] }, @{ $_[1] } ] },
+                'HASH' => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) },
+            },
+            'HASH' => {
+                'SCALAR' => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
+                'ARRAY'  => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
+                'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
+            },
         },
-        'ARRAY' => {
-            'SCALAR' => sub { [ @{ $_[0] }, $_[1] ] },
-            'ARRAY'  => sub { [ @{ $_[0] }, @{ $_[1] } ] },
-            'HASH' => sub { _merge_hashes( _hashify( $_[0] ), $_[1] ) },
-        },
-        'HASH' => {
-            'SCALAR' => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
-            'ARRAY'  => sub { _merge_hashes( $_[0], _hashify( $_[1] ) ) },
-            'HASH'   => sub { _merge_hashes( $_[0], $_[1] ) },
-        },
-    },
-};
+    };
 
-$GLOBAL->{'behavior'} = 'LEFT_PRECEDENT';
-$GLOBAL->{'matrix'}   = $GLOBAL->{behaviors}{ $GLOBAL->{'behavior'} };
-$GLOBAL->{'clone'}    = 1;
+    $GLOBAL->{'behavior'} = 'LEFT_PRECEDENT';
+    $GLOBAL->{'matrix'}   = $GLOBAL->{behaviors}{ $GLOBAL->{'behavior'} };
+    $GLOBAL->{'clone'}    = 1;
+
+}
 
 sub _get_obj {
     if ( my $type = ref $_[0] ) {
@@ -126,9 +131,8 @@ sub set_behavior {
     my $self  = &_get_obj;    # '&' + no args modifies current @_
     my $value = shift;
 
-    my @behaviors
-        = grep {/$value/i}
-        map    { keys %{ $_->{'behaviors'} } }
+    my @behaviors = grep {/$value/i}
+        map { keys %{ $_->{'behaviors'} } }
         ( $self == $GLOBAL ? ($self) : ( $self, $GLOBAL ) );
     if ( scalar @behaviors == 0 ) {
         carp 'Behavior must be one of : '
@@ -216,8 +220,8 @@ sub merge {
         :                         'SCALAR';
 
     if ( $self->{'clone'} ) {
-        $left  = _my_clone($left);
-        $right = _my_clone($right);
+        $left  = clone($left);
+        $right = clone($right);
     }
 
     local $context = $self;
@@ -245,7 +249,7 @@ sub _merge_hashes {
         else {
             $newhash{$leftkey}
                 = $self->{clone}
-                ? $self->_my_clone( $left->{$leftkey} )
+                ? clone( $left->{$leftkey} )
                 : $left->{$leftkey};
         }
     }
@@ -254,7 +258,7 @@ sub _merge_hashes {
         if ( !exists $left->{$rightkey} ) {
             $newhash{$rightkey}
                 = $self->{clone}
-                ? $self->_my_clone( $right->{$rightkey} )
+                ? clone( $right->{$rightkey} )
                 : $right->{$rightkey};
         }
     }
@@ -289,60 +293,6 @@ sub _hashify {
         $newhash{$arg} = $arg;
     }
     return \%newhash;
-}
-
-# This adds some checks to the clone process, to deal with problems that
-# the current distro of ActiveState perl has (specifically, it uses 0.09
-# of Clone, which does not support the cloning of scalars).  This simply
-# wraps around clone as to prevent a scalar from being cloned via a
-# Clone 0.09 process.  This might mean that CODEREFs and anything else
-# not a HASH or ARRAY won't be cloned.
-
-# $clone is global, which should point to coderef
-
-sub _my_clone {
-    my $self = &_get_obj;    # '&' + no args modifies current @_
-    my ($arg) = @_;
-
-    if ( $self->{clone} && !$clone ) {
-        if ( eval { require Clone; 1 } ) {
-            $clone = sub {
-                if (   !( $Clone::VERSION || 0 ) > 0.09
-                    && ref $_[0] ne 'HASH'
-                    && ref $_[0] ne 'ARRAY' )
-                {
-                    my $var = shift;    # Forced clone
-                    return $var;
-                }
-                Clone::clone(shift);
-            };
-        }
-        elsif ( eval { require Storable; 1 } ) {
-            $clone = sub {
-                my $var = shift;        # Forced clone
-                return $var if !ref($var);
-                Storable::dclone($var);
-            };
-        }
-        elsif ( eval { require Clone::PP; 1 } ) {
-            $clone = sub {
-                my $var = shift;        # Forced clone
-                return $var if !ref($var);
-                Clone::PP::clone($var);
-            };
-        }
-        else {
-            croak
-                "Can't load Clone, Storable, or Clone::PP for cloning purpose";
-        }
-    }
-
-    if ( $self->{'clone'} ) {
-        return $clone->($arg);
-    }
-    else {
-        return $arg;
-    }
 }
 
 1;
@@ -557,27 +507,6 @@ the right as $b (these are either scalars or appropriate references)
      HASH         HASH          merge( %$a, %$b )    merge( %$a, %$b )
 
 (*) note that merge calls _merge_hashes, hashify calls _hashify.
-
-=head1 CAVEATS
-
-This will not handle self-referencing/recursion within hashes well.  
-Plans for a future version include incorporate deep recursion protection.
-
-As of Feb 16, 2002, ActiveState Perl's PPM of Clone.pm is only at
-0.09.  This version does not support the cloning of scalars if passed
-to the function.  This is fixed by 0.10 (and currently, Clone.pm is at
-0.13).  So while most other users can upgrade their Clone.pm
-appropriately (and I could put this as a requirement into the
-Makefile.PL), those using ActiveState would lose out on the ability to
-use this module.  (Clone.pm is not pure perl, so it's not simply a
-matter of moving the newer file into place).  Thus, for the time
-being, a check is done at the start of loading of this module to see
-if a newer version of clone is around.  Then, all cloning calls have
-been wrapped in the internal _my_clone function to block any scalar
-clones if Clone.pm is too old.  However, this also prevents the
-cloning of anything that isn't a hash or array under the same
-conditions.  Once ActiveState updates their Clone, I'll remove this 
-wrapper.
 
 =head1 AUTHOR
 
