@@ -188,6 +188,23 @@ sub specify_behavior {
     $self->{'behaviors'}{$name} = $self->{'matrix'} = $matrix;
 }
 
+sub specify_behavior_part {
+    my $self = &_get_obj;
+
+    my ( $matrix, $name ) = @_;
+    $name ||= $self->{'behavior'};
+
+    if ( !exists $self->{'behaviors'}{$name} and !exists $GLOBAL->{'behaviors'}{$name} ) {
+        carp 'Behavior must be one of : ' . join( ', ', keys %{ $self->{'behaviors'} }, keys %{ $GLOBAL->{'behaviors'}{$name} } );
+        return;
+    }
+
+    my $merger     = Hash::Merge->new;
+    $merger->set_behavior( 'RIGHT_PRECEDENT' );
+    my $new_matrix = $merger->merge( $self->{'behaviors'}{$name} || $GLOBAL->{'behaviors'}{$name}, $matrix );
+    $self->{'behaviors'}{$name} = $self->{'matrix'} = $new_matrix;
+}
+
 sub set_clone_behavior {
     my $self     = &_get_obj;          # '&' + no args modifies current @_
     my $oldvalue = $self->{'clone'};
@@ -475,6 +492,19 @@ behavior specification include:
 
 Note that you can import _hashify and _merge_hashes into your program's
 namespace with the 'custom' tag.
+
+=item specify_behavior_part( <hashref>, [<name>] )
+
+Specify only the parts of an existing behavior that should be changed.
+If you want to only change the merging behavior for SCALAR <-> SCALAR in
+the LEFT_PRECEDENT behavior, you can use
+
+  specify_behavior_part(
+    { SCALAR => { SCALAR => sub { $_[0] . '...' . $_[1] } } },
+    'LEFT_PRECEDENT'
+  );
+
+If the name is omitted, the current behavior is changed.
 
 =back
 
