@@ -263,10 +263,7 @@ sub _merge_hashes
         }
         else
         {
-            $newhash{$leftkey} =
-              $self->{clone}
-              ? clone($left->{$leftkey})
-              : $left->{$leftkey};
+            $newhash{$leftkey} = $left->{$leftkey};
         }
     }
 
@@ -274,10 +271,7 @@ sub _merge_hashes
     {
         if (!exists $left->{$rightkey})
         {
-            $newhash{$rightkey} =
-              $self->{clone}
-              ? clone($right->{$rightkey})
-              : $right->{$rightkey};
+            $newhash{$rightkey} = $right->{$rightkey};
         }
     }
 
