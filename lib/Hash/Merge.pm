@@ -10,21 +10,16 @@ use Scalar::Util qw(blessed reftype);
 use base 'Exporter';
 our $CONTEXT;
 
-my $GLOBAL;
-
 our $VERSION     = '0.201';
 our @EXPORT_OK   = qw( merge _hashify _merge_hashes );
 our %EXPORT_TAGS = ('custom' => [qw( _hashify _merge_hashes )]);
 
-BEGIN
+sub _init
 {
-    $GLOBAL = {};
-    bless $GLOBAL, __PACKAGE__;
+    my $self = shift;
 
-    # $CONTEXT is a variable for merge and _merge_hashes. used by functions to respect calling context
-    $CONTEXT = $GLOBAL;
-
-    $GLOBAL->{'behaviors'} = {
+    defined $self->{behaviors}
+      or $self->{behaviors} = {
         'LEFT_PRECEDENT' => {
             'SCALAR' => {
                 'SCALAR' => sub { $_[0] },
@@ -39,7 +34,7 @@ BEGIN
             'HASH' => {
                 'SCALAR' => sub { $_[0] },
                 'ARRAY'  => sub { $_[0] },
-                'HASH'   => sub { _merge_hashes($_[0], $_[1]) },
+                'HASH'   => sub { $self->_merge_hashes($_[0], $_[1]) },
             },
         },
 
@@ -57,7 +52,7 @@ BEGIN
             'HASH' => {
                 'SCALAR' => sub { $_[1] },
                 'ARRAY'  => sub { [values %{$_[0]}, @{$_[1]}] },
-                'HASH'   => sub { _merge_hashes($_[0], $_[1]) },
+                'HASH'   => sub { $self->_merge_hashes($_[0], $_[1]) },
             },
         },
 
@@ -75,60 +70,47 @@ BEGIN
             'HASH' => {
                 'SCALAR' => sub { $_[0] },
                 'ARRAY'  => sub { $_[0] },
-                'HASH'   => sub { _merge_hashes($_[0], $_[1]) },
+                'HASH'   => sub { $self->_merge_hashes($_[0], $_[1]) },
             },
         },
 
         'RETAINMENT_PRECEDENT' => {
             'SCALAR' => {
-                'SCALAR' => sub { [$_[0],                        $_[1]] },
-                'ARRAY'  => sub { [$_[0],                        @{$_[1]}] },
-                'HASH'   => sub { _merge_hashes(_hashify($_[0]), $_[1]) },
+                'SCALAR' => sub { [$_[0],                                      $_[1]] },
+                'ARRAY'  => sub { [$_[0],                                      @{$_[1]}] },
+                'HASH'   => sub { $self->_merge_hashes($self->_hashify($_[0]), $_[1]) },
             },
             'ARRAY' => {
-                'SCALAR' => sub { [@{$_[0]},                     $_[1]] },
-                'ARRAY'  => sub { [@{$_[0]},                     @{$_[1]}] },
-                'HASH'   => sub { _merge_hashes(_hashify($_[0]), $_[1]) },
+                'SCALAR' => sub { [@{$_[0]},                                   $_[1]] },
+                'ARRAY'  => sub { [@{$_[0]},                                   @{$_[1]}] },
+                'HASH'   => sub { $self->_merge_hashes($self->_hashify($_[0]), $_[1]) },
             },
             'HASH' => {
-                'SCALAR' => sub { _merge_hashes($_[0], _hashify($_[1])) },
-                'ARRAY'  => sub { _merge_hashes($_[0], _hashify($_[1])) },
-                'HASH'   => sub { _merge_hashes($_[0], $_[1]) },
+                'SCALAR' => sub { $self->_merge_hashes($_[0], $self->_hashify($_[1])) },
+                'ARRAY'  => sub { $self->_merge_hashes($_[0], $self->_hashify($_[1])) },
+                'HASH'   => sub { $self->_merge_hashes($_[0], $_[1]) },
             },
         },
-    };
+      };
 
-    $GLOBAL->{'behavior'} = 'LEFT_PRECEDENT';
-    $GLOBAL->{'matrix'}   = $GLOBAL->{behaviors}{$GLOBAL->{'behavior'}};
-    $GLOBAL->{'clone'}    = 1;
+    defined $self->{behavior} or $self->{behavior} = 'LEFT_PRECEDENT';
 
-}
+    croak "Behavior '$self->{behavior}' does not exist"
+      if !exists $self->{behaviors}{$self->{behavior}};
 
-sub _get_obj
-{
-    if (my $type = ref $_[0])
-    {
-        return shift()
-          if $type eq __PACKAGE__
-          || (blessed $_[0] && $_[0]->isa(__PACKAGE__));
-    }
-
-    return $CONTEXT;
+    $self->{matrix} = $self->{behaviors}{$self->{behavior}};
+    $self->{clone}  = 1;
 }
 
 sub new
 {
-    my $pkg = shift;
+    my ($pkg, $beh) = @_;
     $pkg = ref $pkg || $pkg;
-    my $beh = shift || $CONTEXT->{'behavior'};
 
-    croak "Behavior '$beh' does not exist"
-      if !exists $CONTEXT->{'behaviors'}{$beh};
+    my $instance = bless {($beh ? (behavior => $beh) : ())}, $pkg;
+    $instance->_init;
 
-    return bless {
-        'behavior' => $beh,
-        'matrix'   => $CONTEXT->{'behaviors'}{$beh},
-    }, $pkg;
+    return $instance;
 }
 
 sub set_behavior
@@ -136,12 +118,10 @@ sub set_behavior
     my $self  = &_get_obj;    # '&' + no args modifies current @_
     my $value = shift;
 
-    my @behaviors = grep { /$value/i }
-      map { keys %{$_->{'behaviors'}} } ($self == $GLOBAL ? ($self) : ($self, $GLOBAL));
+    my @behaviors = grep { /$value/i } keys %{$self->{'behaviors'}};
     if (scalar @behaviors == 0)
     {
-        carp 'Behavior must be one of : '
-          . join(', ', map { keys %{$_->{'behaviors'}} } ($self == $GLOBAL ? ($self) : ($self, $GLOBAL)));
+        carp 'Behavior must be one of : ' . join(', ', keys %{$self->{'behaviors'}});
         return;
     }
     if (scalar @behaviors > 1)
@@ -155,8 +135,7 @@ sub set_behavior
 
     my $oldvalue = $self->{'behavior'};
     $self->{'behavior'} = $value;
-    $self->{'matrix'} =
-      $self->{'behaviors'}{$value} || $GLOBAL->{'behaviors'}{$value};
+    $self->{'matrix'}   = $self->{'behaviors'}{$value};
     return $oldvalue;    # Use classic POSIX pattern for get/set: set returns previous value
 }
 
@@ -250,25 +229,18 @@ sub _merge_hashes
     }
 
     my %newhash;
-    foreach my $leftkey (keys %$left)
+    foreach my $key (keys %$left)
     {
-        if (exists $right->{$leftkey})
-        {
-            $newhash{$leftkey} =
-              $self->merge($left->{$leftkey}, $right->{$leftkey});
-        }
-        else
-        {
-            $newhash{$leftkey} = $left->{$leftkey};
-        }
+        $newhash{$key} =
+          exists $right->{$key}
+          ? $self->merge($left->{$key}, $right->{$key})
+          : $left->{$key};
+
     }
 
-    foreach my $rightkey (keys %$right)
+    foreach my $key (grep { !exists $left->{$_} } keys %$right)
     {
-        if (!exists $left->{$rightkey})
-        {
-            $newhash{$rightkey} = $right->{$rightkey};
-        }
+        $newhash{$key} = $right->{$key};
     }
 
     return \%newhash;
@@ -307,6 +279,22 @@ sub _hashify
         $newhash{$arg} = $arg;
     }
     return \%newhash;
+}
+
+my $_global;
+
+sub _get_obj
+{
+    if (my $type = ref $_[0])
+    {
+        return shift()
+          if $type eq __PACKAGE__
+          || (blessed $_[0] && $_[0]->isa(__PACKAGE__));
+    }
+
+    defined $CONTEXT and return $CONTEXT;
+    defined $_global or $_global = Hash::Merge->new;
+    return $_global;
 }
 
 1;
