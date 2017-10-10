@@ -5,7 +5,7 @@ use warnings;
 
 use Carp;
 use Clone::Choose 0.002;
-use Scalar::Util qw( blessed );
+use Scalar::Util qw(blessed reftype);
 
 use base 'Exporter';
 our $CONTEXT;
@@ -219,15 +219,11 @@ sub merge
     # of all data that is merged.  This behavior can be shut off, but
     # can create havoc if references are used heavily.
 
-    my $lefttype =
-        ref $left eq 'HASH'  ? 'HASH'
-      : ref $left eq 'ARRAY' ? 'ARRAY'
-      :                        'SCALAR';
+    my $lefttype = reftype($left);
+    $lefttype = "SCALAR" unless defined $lefttype and defined $self->{'matrix'}->{$lefttype};
 
-    my $righttype =
-        ref $right eq 'HASH'  ? 'HASH'
-      : ref $right eq 'ARRAY' ? 'ARRAY'
-      :                         'SCALAR';
+    my $righttype = reftype($right);
+    $righttype = "SCALAR" unless defined $righttype and defined $self->{'matrix'}->{$righttype};
 
     if ($self->{'clone'})
     {
