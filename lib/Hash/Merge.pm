@@ -512,7 +512,10 @@ the right as $b (these are either scalars or appropriate references)
 
 =head1 AUTHOR
 
-Michael K. Neylon E<lt>mneylon-pm@masemware.comE<gt>
+Michael K. Neylon E<lt>mneylon-pm@masemware.comE<gt>,
+Daniel Muey E<lt>dmuey@cpan.orgE<gt>,
+Jens Rehsack E<lt>rehsack@cpan.orgE<gt>,
+Stefan Hermes E<lt>hermes@cpan.orgE<gt>
 
 =head1 COPYRIGHT
 

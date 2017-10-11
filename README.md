@@ -201,7 +201,10 @@ the right as $b (these are either scalars or appropriate references)
 
 # AUTHOR
 
-Michael K. Neylon &lt;mneylon-pm@masemware.com>
+Michael K. Neylon <mneylon-pm@masemware.com>,
+Daniel Muey <dmuey@cpan.org>,
+Jens Rehsack <rehsack@cpan.org>,
+Stefan Hermes <hermes@cpan.org>
 
 # COPYRIGHT
 
