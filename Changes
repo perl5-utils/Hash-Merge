@@ -1,5 +1,9 @@
 Revision history for Perl extension Hash::Merge.
 
+0.200_002	2017-10-16
+    - Rely on backend() debug helper of Clone::Choose 0.003 to help
+      identifying issues depending on underlying clone implementation
+
 0.200_001   2017-10-11
     - Switch to Clone::Choose instead of NIH clone detector.
     - Fixed weird object vs. global behavior
