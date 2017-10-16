@@ -6,7 +6,7 @@ use 5.008001;
 use ExtUtils::MakeMaker;
 
 my %RUN_DEPS = (
-    'Clone::Choose' => 0.002,
+    'Clone::Choose' => 0.003,
     'Scalar::Util'  => 0,
 );
 my %CONFIGURE_DEPS = (
