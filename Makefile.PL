@@ -18,6 +18,23 @@ my %TEST_DEPS = (
     'Test::More' => 0.90,
 );
 
+if (-d 'Sandbox')
+{
+    unless (grep { $_ eq '.' } @INC)
+    {
+        use lib '.';
+    }
+    eval "use Sandbox::Tumble ();";
+    $@ and die $@;
+    eval "use File::Path ();";
+    File::Path->import;
+    -d 't/Auto'     and rmtree('t/Auto');
+    -d 't/Clone'    and rmtree('t/Clone');
+    -d 't/Storable' and rmtree('t/Storable');
+    -d 't/ClonePP'  and rmtree('t/ClonePP');
+    Sandbox::Tumble->tumble(qw(t));
+}
+
 WriteMakefile1(
     MIN_PERL_VERSION => '5.008001',
     META_ADD         => {
@@ -40,6 +57,7 @@ WriteMakefile1(
                     'Test::Spelling'                      => 0,
                     'Test::Perl::Critic'                  => 0,
                     'Test::PerlTidy'                      => 0,
+                    'Test::WriteVariants'                 => '0.014',
                 },
             },
             configure => {
@@ -68,7 +86,8 @@ WriteMakefile1(
     PREREQ_PM      => \%RUN_DEPS,
     BUILD_REQUIRES => \%BUILD_DEPS,
     TEST_REQUIRES  => \%TEST_DEPS,
-    test           => {TESTS => 't/*.t xt/*.t'},
+    test           => {TESTS => join(' ', 't/*.t', 'xt/*.t', 't/Auto/*.t', 't/Clone/*.t', 't/Storable/*.t', 't/ClonePP/*.t')},
+    (-d 'Sandbox' ? (realclean => {FILES => join(' ', 't/Auto', 't/Clone', 't/Storable', 't/ClonePP', 'M*.bak')}) : ()),
 );
 
 sub WriteMakefile1

@@ -1,5 +1,6 @@
 ---
 install:
+  - cpanm --notest --with-recommends --with-suggests Test::WriteVariants
   - perl Makefile.PL
   - make manifest
   - cpanm --notest --with-recommends --with-suggests --with-develop --installdeps .

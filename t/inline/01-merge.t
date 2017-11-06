@@ -1,10 +1,13 @@
-#!perl
+use Test::More;
 
-use strict;
-use warnings;
+BEGIN
+{
+    $ENV{CLONE_CHOOSE_PREFERRED_BACKEND}
+      and eval "use $ENV{CLONE_CHOOSE_PREFERRED_BACKEND}; 1;";
+    $@ and plan skip_all => "No $ENV{CLONE_CHOOSE_PREFERRED_BACKEND} found.";
+}
 
-use Test::More tests => 49;
-use Hash::Merge;
+use Hash::Merge qw( merge );
 
 my %left = (
     ss => 'left',
@@ -31,10 +34,8 @@ my %right = (
 );
 
 # Test left precedence
-my $merge = Hash::Merge->new();
-ok($merge->get_behavior() eq 'LEFT_PRECEDENT', 'no arg default is LEFT_PRECEDENT');
-
-my %lp = %{$merge->merge(\%left, \%right)};
+Hash::Merge::set_behavior('LEFT_PRECEDENT');
+my %lp = %{merge(\%left, \%right)};
 
 is_deeply($lp{ss}, 'left', 'Left Precedent - Scalar on Scalar');
 is_deeply($lp{sa}, 'left', 'Left Precedent - Scalar on Array');
@@ -53,10 +54,8 @@ is_deeply(
     'Left Precedent - Hash on Hash'
 );
 
-ok($merge->set_behavior('RIGHT_PRECEDENT') eq 'LEFT_PRECEDENT', 'set_behavior() returns previous behavior');
-ok($merge->get_behavior() eq 'RIGHT_PRECEDENT',                 'set_behavior() actually sets the behavior)');
-
-my %rp = %{$merge->merge(\%left, \%right)};
+Hash::Merge::set_behavior('RIGHT_PRECEDENT');
+my %rp = %{merge(\%left, \%right)};
 
 is_deeply($rp{ss}, 'right', 'Right Precedent - Scalar on Scalar');
 is_deeply($rp{sa}, ['left', 'r1', 'r2'], 'Right Precedent - Scalar on Array');
@@ -76,10 +75,7 @@ is_deeply(
 );
 
 Hash::Merge::set_behavior('STORAGE_PRECEDENT');
-ok($merge->get_behavior() eq 'RIGHT_PRECEDENT', '"global" function does not affect object');
-$merge->set_behavior('STORAGE_PRECEDENT');
-
-my %sp = %{$merge->merge(\%left, \%right)};
+my %sp = %{merge(\%left, \%right)};
 
 is_deeply($sp{ss}, 'left', 'Storage Precedent - Scalar on Scalar');
 is_deeply($sp{sa}, ['left', 'r1', 'r2'], 'Storage Precedent - Scalar on Array');
@@ -98,8 +94,8 @@ is_deeply(
     'Storage Precedent - Hash on Hash'
 );
 
-$merge->set_behavior('RETAINMENT_PRECEDENT');
-my %rep = %{$merge->merge(\%left, \%right)};
+Hash::Merge::set_behavior('RETAINMENT_PRECEDENT');
+my %rep = %{merge(\%left, \%right)};
 
 is_deeply($rep{ss}, ['left', 'right'], 'Retainment Precedent - Scalar on Scalar');
 is_deeply($rep{sa}, ['left', 'r1', 'r2'], 'Retainment Precedent - Scalar on Array');
@@ -148,7 +144,7 @@ is_deeply(
     'Retainment Precedent - Hash on Hash'
 );
 
-$merge->specify_behavior(
+Hash::Merge::specify_behavior(
     {
         SCALAR => {
             SCALAR => sub { $_[0] },
@@ -169,7 +165,7 @@ $merge->specify_behavior(
     "My Behavior"
 );
 
-my %cp = %{$merge->merge(\%left, \%right)};
+my %cp = %{merge(\%left, \%right)};
 
 is_deeply($cp{ss}, 'left', 'Custom Precedent - Scalar on Scalar');
 is_deeply($cp{sa}, 'left', 'Custom Precedent - Scalar on Array');
@@ -180,3 +176,5 @@ is_deeply($cp{ah}, ['l1', 'l2'], 'Custom Precedent - Array on Hash');
 is_deeply($cp{hs}, {left => 1}, 'Custom Precedent - Hash on Scalar');
 is_deeply($cp{ha}, {left => 1}, 'Custom Precedent - Hash on Array');
 is_deeply($cp{hh}, {left => 1}, 'Custom Precedent - Hash on Hash');
+
+done_testing;
