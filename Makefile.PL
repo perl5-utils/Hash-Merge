@@ -6,7 +6,7 @@ use 5.008001;
 use ExtUtils::MakeMaker;
 
 my %RUN_DEPS = (
-    'Clone::Choose' => 0.003,
+    'Clone::Choose' => 0.008,
     'Scalar::Util'  => 0,
 );
 my %CONFIGURE_DEPS = (
@@ -37,9 +37,9 @@ if (-d 'Sandbox')
 
 WriteMakefile1(
     MIN_PERL_VERSION => '5.008001',
-    META_ADD         => {
+    META_MERGE       => {
         'meta-spec'    => {version => 2},
-        dynamic_config => 0,
+        dynamic_config => 1,
         resources      => {
             repository => 'https://github.com/perl5-utils/Hash-Merge',
             license    => 'http://dev.perl.org/licenses/',
@@ -63,8 +63,17 @@ WriteMakefile1(
             configure => {
                 requires => {%CONFIGURE_DEPS},
             },
-            build   => {requires => {%BUILD_DEPS}},
-            test    => {requires => {%TEST_DEPS}},
+            build => {
+                requires => {%BUILD_DEPS},
+            },
+            test => {
+                requires => {%TEST_DEPS},
+                suggests => {
+                    'Clone'     => 0.10,
+                    'Clone::PP' => 0,
+                    'Storable'  => 0
+                }
+            },
             runtime => {
                 requires => {
                     %RUN_DEPS,
