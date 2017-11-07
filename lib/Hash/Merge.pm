@@ -206,8 +206,8 @@ sub merge
 
     if ($self->{'clone'})
     {
-        $left  = clone($left);
-        $right = clone($right);
+        $left  = ref($left)  ? clone($left)  : $left;
+        $right = ref($right) ? clone($right) : $right;
     }
 
     local $CONTEXT = $self;
