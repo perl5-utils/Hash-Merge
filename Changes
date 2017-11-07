@@ -1,5 +1,12 @@
 Revision history for Perl extension Hash::Merge.
 
+0.200_003   2017-11-07
+    - Documentation updated and extended.
+    - Do not clone if not a reference. This fixes a failure when using
+      Storable as backend.
+    - Update dependencies and requirements. 
+    - Extended testing in order to test all the different clone() backends.
+
 0.200_002	2017-10-16
     - Rely on backend() debug helper of Clone::Choose 0.003 to help
       identifying issues depending on underlying clone implementation

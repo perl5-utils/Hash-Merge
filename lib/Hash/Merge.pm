@@ -10,7 +10,7 @@ use Scalar::Util qw(blessed reftype);
 use base 'Exporter';
 our $CONTEXT;
 
-our $VERSION     = '0.200_002';
+our $VERSION     = '0.200_003';
 our @EXPORT_OK   = qw( merge _hashify _merge_hashes );
 our %EXPORT_TAGS = ('custom' => [qw( _hashify _merge_hashes )]);
 
