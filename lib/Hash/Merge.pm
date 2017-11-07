@@ -520,6 +520,8 @@ Stefan Hermes E<lt>hermes@cpan.orgE<gt>
 =head1 COPYRIGHT
 
 Copyright (c) 2001,2002 Michael K. Neylon. All rights reserved.
+Copyright (c) 2013-2017 Jens Rehsack. All rights reserved.
+Copyright (c) 2017 Stefan Hermes. All rights reserved.
 
 This library is free software.  You can redistribute it and/or modify it 
 under the same terms as Perl itself.
