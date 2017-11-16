@@ -222,7 +222,7 @@ sub _merge_hashes
     my $self = &_get_obj;    # '&' + no args modifies current @_
 
     my ($left, $right) = (shift, shift);
-    if (ref $left ne 'HASH' || ref $right ne 'HASH')
+    if (reftype $left ne 'HASH' || reftype $right ne 'HASH')
     {
         carp 'Arguments for _merge_hashes must be hash references';
         return;
