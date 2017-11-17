@@ -185,13 +185,18 @@ is_deeply($cp{ha}, {left => 1}, 'Custom Precedent - Hash on Array');
 is_deeply($cp{hh}, {left => 1}, 'Custom Precedent - Hash on Hash');
 
 {
-    package # Test sponsored by David Wheeler
-        HashMergeHashContainer;
-    my $h1 = { foo => bless {one => 2}, __PACKAGE__ };
-    my $h2 = { foo => bless {one => 2}, __PACKAGE__ };
+    package    # Test sponsored by David Wheeler
+      HashMergeHashContainer;
+    my $h1 = {
+        foo => bless {one => 2},
+        __PACKAGE__
+    };
+    my $h2 = {
+        foo => bless {one => 2},
+        __PACKAGE__
+    };
     my $merged = Hash::Merge->new->merge($h1, $h2);
     main::ok($merged);
 }
-
 
 done_testing;
