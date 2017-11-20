@@ -10,7 +10,7 @@ use Scalar::Util qw(blessed);
 use base 'Exporter';
 our $CONTEXT;
 
-our $VERSION     = '0.298';
+our $VERSION     = '0.299';
 our @EXPORT_OK   = qw( merge _hashify _merge_hashes );
 our %EXPORT_TAGS = ('custom' => [qw( _hashify _merge_hashes )]);
 

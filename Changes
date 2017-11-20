@@ -1,5 +1,10 @@
 Revision history for Perl extension Hash::Merge.
 
+0.299       2017-11-20
+    - Fixed behavior change if Hash contains blessed hashes (Thanks to
+      David E. Wheeler)
+    - Extended testing with blessed objects.
+
 0.298       2017-11-15
     - Version 0.298 release
 
