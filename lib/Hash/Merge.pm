@@ -385,8 +385,8 @@ attempted.
 
     my $merge = Hash::Merge->new();
     my $merge = Hash::Merge->new('LEFT_PRECEDENT');
-    $merge->set_set_behavior('LEFT_PRECEDENT');
-    Hash::Merge::set_set_behavior('LEFT_PRECEDENT');
+    $merge->set_behavior('LEFT_PRECEDENT');
+    Hash::Merge::set_behavior('LEFT_PRECEDENT');
 
 =item Right Precedence
 
@@ -394,8 +394,8 @@ Same as Left Precedence, but with the right
 hash values never being lost
 
     my $merge = Hash::Merge->new('RIGHT_PRECEDENT');
-    $merge->set_set_behavior('RIGHT_PRECEDENT');
-    Hash::Merge::set_set_behavior('RIGHT_PRECEDENT');
+    $merge->set_behavior('RIGHT_PRECEDENT');
+    Hash::Merge::set_behavior('RIGHT_PRECEDENT');
 
 =item Storage Precedence
 
@@ -405,8 +405,8 @@ scalars, hashes over either.  The other medium will try to be fitted in
 the other, but if this isn't possible, the data is dropped.
 
     my $merge = Hash::Merge->new('STORAGE_PRECEDENT');
-    $merge->set_set_behavior('STORAGE_PRECEDENT');
-    Hash::Merge::set_set_behavior('STORAGE_PRECEDENT');
+    $merge->set_behavior('STORAGE_PRECEDENT');
+    Hash::Merge::set_behavior('STORAGE_PRECEDENT');
 
 =item Retainment Precedence
 
@@ -415,8 +415,8 @@ with arrays, and scalars and arrays will be 'hashified' to fit them into
 a hash.
 
     my $merge = Hash::Merge->new('RETAINMENT_PRECEDENT');
-    $merge->set_set_behavior('RETAINMENT_PRECEDENT');
-    Hash::Merge::set_set_behavior('RETAINMENT_PRECEDENT');
+    $merge->set_behavior('RETAINMENT_PRECEDENT');
+    Hash::Merge::set_behavior('RETAINMENT_PRECEDENT');
 
 =back
 
