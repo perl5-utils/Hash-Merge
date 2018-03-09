@@ -44,6 +44,19 @@ WriteMakefile1(
             repository => 'https://github.com/perl5-utils/Hash-Merge',
             license    => 'http://dev.perl.org/licenses/',
         },
+        resources => {
+            homepage   => 'https://metacpan.org/release/Hash-Merge',
+            repository => {
+                url  => 'https://github.com/perl5-utils/Hash-Merge.git',
+                web  => 'https://github.com/perl5-utils/Hash-Merge',
+                type => 'git',
+            },
+            bugtracker => {
+                web    => 'http://rt.cpan.org/Public/Dist/Display.html?Name=Hash-Merge',
+                mailto => 'hash-merge@rt.cpan.org',
+            },
+            license => 'http://dev.perl.org/licenses/',
+        },
         prereqs => {
             develop => {
                 requires => {
