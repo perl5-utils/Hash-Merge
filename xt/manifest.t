@@ -11,4 +11,4 @@ BEGIN
 }
 use Test::CheckManifest;
 
-ok_manifest();
+ok_manifest({filter => [qr/cover_db/]});
