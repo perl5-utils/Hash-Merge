@@ -318,6 +318,13 @@ __END__
 
 Hash::Merge - Merges arbitrarily deep hashes into a single hash
 
+=begin html
+
+<a href="https://travis-ci.org/perl5-utils/Hash-Merge"><img src="https://travis-ci.org/perl5-utils/Hash-Merge.svg?branch=master" alt="Travis CI"/></a>
+<a href='https://coveralls.io/github/perl5-utils/Hash-Merge?branch=master'><img src='https://coveralls.io/repos/github/perl5-utils/Hash-Merge/badge.svg?branch=master' alt='Coverage Status'/></a>
+
+=end html
+
 =head1 SYNOPSIS
 
     my %a = (
