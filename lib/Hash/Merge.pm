@@ -145,7 +145,7 @@ sub get_behavior
     return $self->{'behavior'};
 }
 
-sub specify_behavior
+sub add_behavior_spec
 {
     my $self = &_get_obj;    # '&' + no args modifies current @_
     my ($matrix, $name) = @_;
@@ -172,6 +172,19 @@ sub specify_behavior
 
     $self->{'behavior'} = $name;
     $self->{'behaviors'}{$name} = $self->{'matrix'} = $matrix;
+}
+
+no strict "refs";
+*specify_behavior = \&add_behavior_spec;
+use strict;
+
+sub get_behavior_spec
+{
+    my $self = &_get_obj;    # '&' + no args modifies current @_
+    my ($name) = @_;
+    $name ||= 'user defined';
+    exists $self->{'behaviors'}{$name} and return $self->{'behaviors'}{$name};
+  return:
 }
 
 sub set_clone_behavior
@@ -324,7 +337,7 @@ Hash::Merge - Merges arbitrarily deep hashes into a single hash
     
     # This is the same as above
     
-    Hash::Merge::specify_behavior(
+    Hash::Merge::add_behavior_spec(
         {   'SCALAR' => {
                 'SCALAR' => sub { $_[1] },
                 'ARRAY'  => sub { [ $_[0], @{ $_[1] } ] },
@@ -346,11 +359,23 @@ Hash::Merge - Merges arbitrarily deep hashes into a single hash
     
     # Also there is OO interface.
     
-    my $merge = Hash::Merge->new('LEFT_PRECEDENT');
-    my %c = %{ $merge->merge( \%a, \%b ) };
+    my $merger = Hash::Merge->new('LEFT_PRECEDENT');
+    my %c = %{ $merger->merge( \%a, \%b ) };
     
     # All behavioral changes (e.g. $merge->set_behavior(...)), called on an object remain specific to that object
     # The legacy "Global Setting" behavior is respected only when new called as a non-OO function.
+
+    # re-use globally specified behavior
+    my $merger = Hash::Merge->new();
+    $merger->add_behavior_spec(Hash::Merge::get_behavior_spec("My Behavior"), "My Behavior");
+    my %c = %{ $merger->merge( \%a, \%b ) };
+
+    # re-use externally specified behavior
+    use Hash::Merge::Extra ();
+    my $merger = Hash::Merge->new();
+    $merger->add_behavior_spec(Hash::Merge::Extra::L_REPLACE, "L_REPLACE");
+    my %c = %{ $merger->merge( \%a, \%b ) };
+
 
 =head1 DESCRIPTION
 
@@ -460,9 +485,13 @@ must be one of those given below.
 
 Returns the behavior that is currently in use by Hash::Merge.
 
-=item specify_behavior( <hashref>, [<name>] )
+=item specify_behavior( <hashref>, [<name>] ) [deprecated]
 
-Specify a custom merge behavior for Hash::Merge.  This must be a hashref
+Alias for C<add_behavior_spec>.
+
+=item add_behavior_spec( <hashref>, [<name>] )
+
+Add a custom merge behavior spec for Hash::Merge.  This must be a hashref
 defined with (at least) 3 keys, SCALAR, ARRAY, and HASH; each of those
 keys must have another hashref with (at least) the same 3 keys defined.
 Furthermore, the values in those hashes must be coderefs.  These will be
@@ -477,6 +506,13 @@ behavior specification include:
 
 Note that you can import _hashify and _merge_hashes into your program's
 namespace with the 'custom' tag.
+
+=item get_behavior_spec( [<name>] )
+
+Return a previously defined merge behavior spec. If name ism't specified,
+the same default as add_behavior_spec is applied.
+
+If no such name is known referring to an behavior spec, nothing is returned.
 
 =back
 
