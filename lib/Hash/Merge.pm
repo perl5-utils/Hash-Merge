@@ -5,7 +5,7 @@ use warnings;
 
 use Carp;
 use Clone::Choose 0.008;
-use Scalar::Util qw(blessed);
+use Scalar::Util qw(blessed weaken);
 
 use base 'Exporter';
 our $CONTEXT;
@@ -17,6 +17,9 @@ our %EXPORT_TAGS = ('custom' => [qw( _hashify _merge_hashes )]);
 sub _init
 {
     my $self = shift;
+
+    my $weak = $self;
+    weaken $weak;
 
     defined $self->{behaviors}
       or $self->{behaviors} = {
@@ -34,7 +37,7 @@ sub _init
             'HASH' => {
                 'SCALAR' => sub { $_[0] },
                 'ARRAY'  => sub { $_[0] },
-                'HASH'   => sub { $self->_merge_hashes($_[0], $_[1]) },
+                'HASH'   => sub { $weak->_merge_hashes($_[0], $_[1]) },
             },
         },
 
@@ -52,7 +55,7 @@ sub _init
             'HASH' => {
                 'SCALAR' => sub { $_[1] },
                 'ARRAY'  => sub { [values %{$_[0]}, @{$_[1]}] },
-                'HASH'   => sub { $self->_merge_hashes($_[0], $_[1]) },
+                'HASH'   => sub { $weak->_merge_hashes($_[0], $_[1]) },
             },
         },
 
@@ -70,7 +73,7 @@ sub _init
             'HASH' => {
                 'SCALAR' => sub { $_[0] },
                 'ARRAY'  => sub { $_[0] },
-                'HASH'   => sub { $self->_merge_hashes($_[0], $_[1]) },
+                'HASH'   => sub { $weak->_merge_hashes($_[0], $_[1]) },
             },
         },
 
@@ -78,17 +81,17 @@ sub _init
             'SCALAR' => {
                 'SCALAR' => sub { [$_[0],                                      $_[1]] },
                 'ARRAY'  => sub { [$_[0],                                      @{$_[1]}] },
-                'HASH'   => sub { $self->_merge_hashes($self->_hashify($_[0]), $_[1]) },
+                'HASH'   => sub { $weak->_merge_hashes($weak->_hashify($_[0]), $_[1]) },
             },
             'ARRAY' => {
                 'SCALAR' => sub { [@{$_[0]},                                   $_[1]] },
                 'ARRAY'  => sub { [@{$_[0]},                                   @{$_[1]}] },
-                'HASH'   => sub { $self->_merge_hashes($self->_hashify($_[0]), $_[1]) },
+                'HASH'   => sub { $weak->_merge_hashes($weak->_hashify($_[0]), $_[1]) },
             },
             'HASH' => {
-                'SCALAR' => sub { $self->_merge_hashes($_[0], $self->_hashify($_[1])) },
-                'ARRAY'  => sub { $self->_merge_hashes($_[0], $self->_hashify($_[1])) },
-                'HASH'   => sub { $self->_merge_hashes($_[0], $_[1]) },
+                'SCALAR' => sub { $weak->_merge_hashes($_[0], $weak->_hashify($_[1])) },
+                'ARRAY'  => sub { $weak->_merge_hashes($_[0], $weak->_hashify($_[1])) },
+                'HASH'   => sub { $weak->_merge_hashes($_[0], $_[1]) },
             },
         },
       };
