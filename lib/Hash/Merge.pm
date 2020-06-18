@@ -79,13 +79,13 @@ sub _init
 
         'RETAINMENT_PRECEDENT' => {
             'SCALAR' => {
-                'SCALAR' => sub { [$_[0],                                      $_[1]] },
-                'ARRAY'  => sub { [$_[0],                                      @{$_[1]}] },
+                'SCALAR' => sub { [$_[0], $_[1]] },
+                'ARRAY'  => sub { [$_[0], @{$_[1]}] },
                 'HASH'   => sub { $weak->_merge_hashes($weak->_hashify($_[0]), $_[1]) },
             },
             'ARRAY' => {
-                'SCALAR' => sub { [@{$_[0]},                                   $_[1]] },
-                'ARRAY'  => sub { [@{$_[0]},                                   @{$_[1]}] },
+                'SCALAR' => sub { [@{$_[0]}, $_[1]] },
+                'ARRAY'  => sub { [@{$_[0]}, @{$_[1]}] },
                 'HASH'   => sub { $weak->_merge_hashes($weak->_hashify($_[0]), $_[1]) },
             },
             'HASH' => {

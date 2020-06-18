@@ -16,7 +16,7 @@ sub tumble
     my ($class, $output_dir) = @_;
 
     my $template_dir = Cwd::abs_path(File::Spec->catdir($FindBin::RealBin, "t"));
-    my $test_writer = Test::WriteVariants->new();
+    my $test_writer  = Test::WriteVariants->new();
     $test_writer->allow_dir_overwrite(1);
     $test_writer->allow_file_overwrite(1);
 
@@ -42,7 +42,7 @@ sub provider
     my $warnings = $context->new_module_use(warnings => ['all']);
 
     # statically generate both at dist authoring stage and decide about tests to run at configure stage
-    $variants->{Auto} = $context->new($warnings, $strict,);
+    $variants->{Auto}  = $context->new($warnings, $strict,);
     $variants->{Clone} = $context->new(
         $context->new_env_var(
             CLONE_CHOOSE_PREFERRED_BACKEND => "Clone",
