@@ -121,7 +121,7 @@ sub set_behavior
     my $self  = &_get_obj;    # '&' + no args modifies current @_
     my $value = shift;
 
-    my @behaviors = grep { /$value/i } keys %{$self->{'behaviors'}};
+    my @behaviors = grep { /^$value$/i } keys %{$self->{'behaviors'}};
     if (scalar @behaviors == 0)
     {
         carp 'Behavior must be one of : ' . join(', ', keys %{$self->{'behaviors'}});
